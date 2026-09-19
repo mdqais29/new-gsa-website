@@ -69,10 +69,16 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
   }, [getNearestFrame]);
 
-  // Initial draw and window resize handling
+  // Initial draw and window resize handling (guarded against mobile address bar height jitter)
   useEffect(() => {
+    let lastWidth = window.innerWidth;
+
     const handleResize = () => {
-      drawFrame(lastDrawnFrameRef.current);
+      // Only recalculate on desktop or if width actually changed (rotations/resizing)
+      if (Math.abs(window.innerWidth - lastWidth) > 10 || window.innerWidth >= 768) {
+        lastWidth = window.innerWidth;
+        drawFrame(lastDrawnFrameRef.current);
+      }
     };
 
     window.addEventListener('resize', handleResize);
@@ -90,7 +96,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     if (!container || !canvas) return;
 
     const isDesktop = window.innerWidth >= 768;
-    const endDistance = isDesktop ? '+=550%' : '+=520%';
+    const endDistance = isDesktop ? '+=550%' : '+=500%';
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
@@ -100,9 +106,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         pin: true,
         pinSpacing: true,
         anticipatePin: 1,
-        scrub: isDesktop ? 0.5 : 0.7,
-        invalidateOnRefresh: true,
-        fastScrollEnd: true,
+        scrub: isDesktop ? 0.5 : 0.6,
         onUpdate: (self) => {
           const progress = self.progress;
           setScrollProgress(progress);
