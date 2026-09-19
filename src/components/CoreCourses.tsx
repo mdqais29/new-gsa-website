@@ -1,11 +1,7 @@
 import React from 'react';
 import { motion, Variants } from 'framer-motion';
 
-interface CoreCoursesProps {
-  onOpenEnroll: (course?: string) => void;
-}
-
-export const CoreCourses: React.FC<CoreCoursesProps> = ({ onOpenEnroll }) => {
+export const CoreCourses: React.FC = () => {
   const courses = [
     {
       id: 'fire-safety',
@@ -91,9 +87,7 @@ export const CoreCourses: React.FC<CoreCoursesProps> = ({ onOpenEnroll }) => {
               key={course.id}
               variants={itemVariants}
               whileHover={{ y: -6, transition: { duration: 0.25 } }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onOpenEnroll(course.title)}
-              className="group relative rounded-2xl sm:rounded-3xl bg-white border border-slate-300 p-4 sm:p-6 hover:shadow-2xl hover:border-safety-orange/50 transition-colors duration-300 flex flex-col justify-start shadow-lg shadow-slate-900/8 cursor-pointer"
+              className="group relative rounded-2xl sm:rounded-3xl bg-white border border-slate-300 p-4 sm:p-6 hover:shadow-2xl hover:border-safety-orange/50 transition-colors duration-300 flex flex-col justify-start shadow-lg shadow-slate-900/8"
             >
               {/* Top AI-Generated Course Image */}
               <div className="relative w-full aspect-[4/3] rounded-xl sm:rounded-2xl overflow-hidden mb-4 sm:mb-5 bg-slate-100 border border-slate-200/80 shadow-sm">

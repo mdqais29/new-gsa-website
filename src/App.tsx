@@ -47,7 +47,7 @@ export const App: React.FC = () => {
       <SectionDivider />
 
       {/* 3. Core Courses Section (Visual Cards with Depth) */}
-      <CoreCourses onOpenEnroll={handleOpenEnroll} />
+      <CoreCourses />
 
       {/* Orange Section Divider Line */}
       <SectionDivider />
