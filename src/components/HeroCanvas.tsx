@@ -107,7 +107,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         pin: true,
         pinSpacing: true,
         anticipatePin: isDesktop ? 1 : 0,
-        scrub: 1.5, // 1.5 seconds of buttery smooth inertia/momentum
+        scrub: 2.5, // 2.5 seconds of luxurious cinematic momentum (increased per user request)
         onUpdate: (self) => {
           const progress = self.progress;
           setScrollProgress(progress);
