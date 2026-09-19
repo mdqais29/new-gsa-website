@@ -196,7 +196,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         {/* Phase 1 Studio Scrim - Strictly restrained to bottom 35% on mobile */}
         <div className="absolute bottom-0 left-0 right-0 h-[38%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/80 via-midnight-950/40 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
-        <div className="relative z-10 max-w-md lg:max-w-lg text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+        <div className="relative z-10 max-w-md lg:max-w-lg text-left drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
           <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#FFF0E5] shadow-md mb-2 sm:mb-3.5">
             <span className="w-2 h-2 rounded-full bg-[#FF3E00] animate-pulse" />
@@ -228,7 +228,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         {/* Phase 2 Studio Scrim - Strictly restrained to bottom 35% on mobile */}
         <div className="absolute bottom-0 left-0 right-0 h-[38%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/80 via-midnight-950/40 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
-        <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+        <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
           <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#FFF0E5] shadow-md mb-2 sm:mb-3.5">
             <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-widest text-[#FF3E00] uppercase font-mono">
@@ -265,7 +265,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         {/* Phase 3 Studio Scrim - Restrained to bottom 46% on mobile for complete top visual freedom */}
         <div className="absolute bottom-0 left-0 right-0 h-[48%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/90 via-midnight-950/50 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
 
-        <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+        <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
           <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-[#FFF0E5] shadow-md mb-2.5 sm:mb-4">
             <span className="w-2 h-2 rounded-full bg-[#FF3E00] animate-pulse" />
