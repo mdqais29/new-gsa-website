@@ -106,7 +106,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         pin: true,
         pinSpacing: true,
         anticipatePin: isDesktop ? 1 : 0,
-        scrub: isDesktop ? 0.5 : true,
+        scrub: isDesktop ? 0.8 : 1.2,
         onUpdate: (self) => {
           const progress = self.progress;
           setScrollProgress(progress);
