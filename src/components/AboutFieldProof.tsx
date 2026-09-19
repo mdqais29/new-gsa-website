@@ -4,33 +4,33 @@ import { motion } from 'framer-motion';
 
 export const AboutFieldProof: React.FC = () => {
   return (
-    <section id="about" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-midnight-950 bg-industrial-grid-dark overflow-hidden">
+    <section id="about" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-slate-100/80 bg-industrial-grid overflow-hidden">
       <div className="max-w-7xl mx-auto">
         {/* ABOUT US & FIELD EXPERTISE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
-          {/* Left Column: About Info, 3 Stacked Cards & 2 Bottom Support Cards */}
+          
+          {/* Left Column: Vision & Philosophy */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="lg:col-span-6 flex flex-col justify-between h-full space-y-6"
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="lg:col-span-5 flex flex-col justify-center space-y-6"
           >
-            {/* Header / Intro */}
-            <div>
-              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange/10 border border-safety-orange/30 text-safety-orange font-bold text-xs tracking-wider uppercase mb-3 sm:mb-3.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-safety-orange" />
+            <div className="max-w-lg">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange/10 border border-safety-orange/30 text-safety-orange font-bold text-xs tracking-wider uppercase mb-4 sm:mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-safety-orange animate-pulse" />
                 <span>About Us</span>
               </div>
 
-              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.15] mb-3 font-display">
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 tracking-tight leading-[1.15] mb-3 font-display">
                 Train Smart. Work Safe. <br />
                 <span className="text-[#FF3E00]">
                   Succeed Globally.
                 </span>
               </h2>
 
-              <p className="text-xs sm:text-base text-slate-300 leading-relaxed font-normal">
+              <p className="text-xs sm:text-base text-slate-700 leading-relaxed font-normal">
                 Global Safety Academy builds skilled safety professionals through practical training and globally recognized certifications, preparing them for successful safety careers.
               </p>
             </div>
