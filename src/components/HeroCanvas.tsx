@@ -30,7 +30,8 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     const img = getNearestFrame(frameNum);
     if (!img || !img.complete || img.naturalWidth === 0) return;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const isDesktop = window.innerWidth >= 768;
+    const dpr = isDesktop ? Math.min(window.devicePixelRatio || 1, 2) : 1;
     const rect = canvas.getBoundingClientRect();
     
     // Set actual canvas resolution with fallback if rect is 0
@@ -106,7 +107,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         pin: true,
         pinSpacing: true,
         anticipatePin: isDesktop ? 1 : 0,
-        scrub: isDesktop ? 0.8 : 1.2,
+        scrub: isDesktop ? 0.8 : 0.3,
         onUpdate: (self) => {
           const progress = self.progress;
           setScrollProgress(progress);
