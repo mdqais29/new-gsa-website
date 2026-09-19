@@ -90,7 +90,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     if (!container || !canvas) return;
 
     const isDesktop = window.innerWidth >= 768;
-    const endDistance = isDesktop ? '+=550%' : '+=350%';
+    const endDistance = isDesktop ? '+=550%' : '+=520%';
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
@@ -98,7 +98,11 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         start: 'top top',
         end: endDistance,
         pin: true,
-        scrub: 0.5,
+        pinSpacing: true,
+        anticipatePin: 1,
+        scrub: isDesktop ? 0.5 : 0.7,
+        invalidateOnRefresh: true,
+        fastScrollEnd: true,
         onUpdate: (self) => {
           const progress = self.progress;
           setScrollProgress(progress);
@@ -126,29 +130,29 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
   }, [totalFrames, drawFrame]);
 
   // Phase Opacity Calculations - Calibrated for generous holding time & smooth reads
-  // Phase 1: 0% - 24% (solid until 18%, gracefully fades out by 26%)
-  const phase1Opacity = scrollProgress <= 0.18 
+  // Phase 1: 0% - 22% (solid until 18%, gracefully fades out by 26%)
+  const phase1Opacity = scrollProgress <= 0.20 
     ? 1 
-    : Math.max(0, 1 - (scrollProgress - 0.18) / 0.08);
+    : Math.max(0, 1 - (scrollProgress - 0.20) / 0.08);
 
-  // Phase 2: 30% - 66% (fades in 30%-38%, solid hold 38%-58%, fades out 58%-68%)
+  // Phase 2: 28% - 64% (fades in 28%-36%, solid hold 36%-56%, fades out 56%-64%)
   let phase2Opacity = 0;
-  if (scrollProgress >= 0.28 && scrollProgress <= 0.68) {
-    if (scrollProgress < 0.38) {
-      phase2Opacity = (scrollProgress - 0.28) / 0.10;
-    } else if (scrollProgress > 0.58) {
-      phase2Opacity = Math.max(0, 1 - (scrollProgress - 0.58) / 0.10);
+  if (scrollProgress >= 0.26 && scrollProgress <= 0.65) {
+    if (scrollProgress < 0.35) {
+      phase2Opacity = (scrollProgress - 0.26) / 0.09;
+    } else if (scrollProgress > 0.56) {
+      phase2Opacity = Math.max(0, 1 - (scrollProgress - 0.56) / 0.09);
     } else {
       phase2Opacity = 1;
     }
   }
 
-  // Phase 3: 68% - 100% Fixed Hero Lockup (fades in 68%-80%, remains firmly locked & interactable)
-  const phase3Progress = Math.max(0, Math.min(1, (scrollProgress - 0.68) / 0.12));
-  const isPhase3Active = scrollProgress >= 0.68;
+  // Phase 3: 65% - 100% Fixed Hero Lockup (fades in 65%-75%, remains firmly locked & interactable)
+  const phase3Progress = Math.max(0, Math.min(1, (scrollProgress - 0.65) / 0.10));
+  const isPhase3Active = scrollProgress >= 0.65;
 
   return (
-    <section id="hero" ref={containerRef} className="relative w-full h-[100dvh] overflow-hidden bg-midnight-950">
+    <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100dvh] overflow-hidden bg-midnight-950">
       {/* HTML5 Canvas Background */}
       <canvas
         ref={canvasRef}
