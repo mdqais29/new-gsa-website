@@ -166,16 +166,16 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         style={{ display: 'block' }}
       />
 
-      {/* Gentle Vignette: subtle bottom fade for smooth section transition without dark side washes */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/40 via-transparent to-midnight-950/15" />
+      {/* Gentle Vignette: Desktop only to keep mobile 100% bright and clean */}
+      <div className="hidden sm:block absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/40 via-transparent to-midnight-950/15" />
 
       {/* PHASE 1 OVERLAY (0% - 28%): Starting Career */}
       <div
         className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
         style={{ opacity: phase1Opacity, visibility: phase1Opacity > 0.05 ? 'visible' : 'hidden' }}
       >
-        {/* Phase 1 Studio Scrim */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/85 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
+        {/* Phase 1 Studio Scrim - Strictly restrained to bottom 35% on mobile */}
+        <div className="absolute bottom-0 left-0 right-0 h-[38%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/80 via-midnight-950/40 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
         <div className="relative z-10 max-w-md lg:max-w-lg text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
@@ -206,8 +206,8 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
         style={{ opacity: phase2Opacity, visibility: phase2Opacity > 0.05 ? 'visible' : 'hidden' }}
       >
-        {/* Phase 2 Studio Scrim */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/85 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
+        {/* Phase 2 Studio Scrim - Strictly restrained to bottom 35% on mobile */}
+        <div className="absolute bottom-0 left-0 right-0 h-[38%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/80 via-midnight-950/40 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
         <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
@@ -243,8 +243,8 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           visibility: phase3Opacity > 0.05 ? 'visible' : 'hidden',
         }}
       >
-        {/* Phase 3 Studio Scrim - Deep high-contrast bottom-to-top gradient for razor-sharp readability */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/95 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
+        {/* Phase 3 Studio Scrim - Restrained to bottom 46% on mobile for complete top visual freedom */}
+        <div className="absolute bottom-0 left-0 right-0 h-[48%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/90 via-midnight-950/50 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
 
         <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
