@@ -54,7 +54,7 @@ export const CoreCourses: React.FC = () => {
   };
 
   return (
-    <section id="courses" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-slate-100/80 bg-industrial-grid">
+    <section id="courses" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-midnight-950 bg-industrial-grid-dark">
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
         <motion.div
@@ -69,7 +69,7 @@ export const CoreCourses: React.FC = () => {
             <span>Courses</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 tracking-tight leading-tight font-display">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-tight font-display">
             Choose a program that matches your ambition
           </h2>
         </motion.div>

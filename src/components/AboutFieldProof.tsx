@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 export const AboutFieldProof: React.FC = () => {
   return (
-    <section id="about" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-slate-100/80 bg-industrial-grid overflow-hidden">
+    <section id="about" className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 lg:px-8 bg-midnight-950 bg-industrial-grid-dark overflow-hidden">
       <div className="max-w-7xl mx-auto">
         {/* ABOUT US & FIELD EXPERTISE */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-stretch">
@@ -23,14 +23,14 @@ export const AboutFieldProof: React.FC = () => {
                 <span>About Us</span>
               </div>
 
-              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 tracking-tight leading-[1.15] mb-3 font-display">
+              <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.15] mb-3 font-display">
                 Train Smart. Work Safe. <br />
                 <span className="text-[#FF3E00]">
                   Succeed Globally.
                 </span>
               </h2>
 
-              <p className="text-xs sm:text-base text-slate-700 leading-relaxed font-normal">
+              <p className="text-xs sm:text-base text-slate-300 leading-relaxed font-normal">
                 Global Safety Academy builds skilled safety professionals through practical training and globally recognized certifications, preparing them for successful safety careers.
               </p>
             </div>
