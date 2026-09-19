@@ -177,7 +177,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
   const isPhase3Active = scrollProgress >= 0.62;
 
   return (
-    <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100dvh] overflow-hidden bg-midnight-950">
+    <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100vh] overflow-hidden bg-midnight-950">
       {/* HTML5 Canvas Background */}
       <canvas
         ref={canvasRef}

@@ -37,7 +37,7 @@ export function useHeroFrames() {
       }
     }
 
-    const loadBatch = (indices: number[], concurrency = 8): Promise<void> => {
+    const loadBatch = (indices: number[], concurrency = 4, delay = 0): Promise<void> => {
       return new Promise((resolve) => {
         let cursor = 0;
         let active = 0;
@@ -59,14 +59,23 @@ export function useHeroFrames() {
             img.onload = () => {
               if (isMounted) {
                 images[idx] = img;
+                active--;
+                if (delay > 0) {
+                  setTimeout(pump, delay);
+                } else {
+                  pump();
+                }
               }
-              active--;
-              pump();
             };
-
             img.onerror = () => {
-              active--;
-              pump();
+              if (isMounted) {
+                active--;
+                if (delay > 0) {
+                  setTimeout(pump, delay);
+                } else {
+                  pump();
+                }
+              }
             };
           }
         };
@@ -75,10 +84,11 @@ export function useHeroFrames() {
       });
     };
 
-    // Sequentially kick off priority then remaining
-    loadBatch(priorityIndices, 10).then(() => {
+    // Chain the loading: Load priority frames first, then load secondary frames VERY slowly in the background
+    loadBatch(priorityIndices, 4).then(() => {
       if (isMounted) {
-        loadBatch(secondaryIndices, 6);
+        // Concurrency 2, with 50ms delay between requests to free up the network for other assets
+        loadBatch(secondaryIndices, 2, 50);
       }
     });
 
