@@ -107,7 +107,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         pin: true,
         pinSpacing: true,
         anticipatePin: isDesktop ? 1 : 0,
-        scrub: 1.0, // 1.0s gives perfect balance: smooth momentum when swiping, but stops quickly when tapped
+        scrub: 2.5, // 2.5s gives the luxurious cinematic glide the user explicitly prefers
         onUpdate: (self) => {
           const progress = self.progress;
           setScrollProgress(progress);
