@@ -13,6 +13,19 @@ ScrollTrigger.config({
 
 export function useLenis() {
   useEffect(() => {
+    // Detect mobile touch devices
+    const isTouchDevice =
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.innerWidth < 768;
+
+    // On mobile touch devices, allow 100% native hardware-accelerated scrolling.
+    // Running Lenis on mobile touch hijacks touch gestures, fights native inertia,
+    // and causes GSAP pin-spacers to lock or snap back to 0 on slow scrolling.
+    if (isTouchDevice) {
+      return;
+    }
+
     const lenis = new Lenis({
       duration: 1.0,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -20,7 +33,6 @@ export function useLenis() {
       gestureOrientation: 'vertical',
       smoothWheel: true,
       wheelMultiplier: 1.0,
-      touchMultiplier: 1.0,
     });
 
     // Synchronize Lenis scroll event with ScrollTrigger updates

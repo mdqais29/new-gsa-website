@@ -99,8 +99,8 @@ export function useHeroFrames() {
       return exact;
     }
 
-    // Search outwards for closest available loaded frame
-    for (let offset = 1; offset < 40; offset++) {
+    // Search outwards for closest available loaded frame (expanded search radius)
+    for (let offset = 1; offset <= 120; offset++) {
       const before = clamped - offset;
       if (before >= 1) {
         const imgBefore = images[before];
@@ -119,10 +119,21 @@ export function useHeroFrames() {
       }
     }
 
-    // Fallback to last successfully found frame or frame 1
+    // Check last successfully found frame
     const lastFound = images[lastFoundIndexRef.current];
     if (lastFound && lastFound.complete && lastFound.naturalWidth > 0) {
       return lastFound;
+    }
+
+    // If scrubbing in the video and no nearby frame is found, search backwards to find the highest loaded frame
+    if (clamped > 1) {
+      for (let i = clamped; i >= 1; i--) {
+        const img = images[i];
+        if (img && img.complete && img.naturalWidth > 0) {
+          lastFoundIndexRef.current = i;
+          return img;
+        }
+      }
     }
 
     return images[1] || null;

@@ -96,7 +96,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     if (!container || !canvas) return;
 
     const isDesktop = window.innerWidth >= 768;
-    const endDistance = isDesktop ? '+=550%' : '+=500%';
+    const endDistance = isDesktop ? '+=550%' : '+=320%';
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
@@ -105,11 +105,20 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         end: endDistance,
         pin: true,
         pinSpacing: true,
-        anticipatePin: 1,
-        scrub: isDesktop ? 0.5 : 0.6,
+        anticipatePin: isDesktop ? 1 : 0,
+        scrub: isDesktop ? 0.5 : 0.1,
         onUpdate: (self) => {
           const progress = self.progress;
           setScrollProgress(progress);
+
+          // Firmly lock to final frame when approaching or reaching the end of the scroll
+          if (progress >= 0.98) {
+            if (lastDrawnFrameRef.current !== totalFrames) {
+              lastDrawnFrameRef.current = totalFrames;
+              drawFrame(totalFrames);
+            }
+            return;
+          }
 
           // Hysteresis threshold to completely eliminate frame oscillation/jitter when stopping
           const rawTarget = 1 + progress * (totalFrames - 1);
@@ -126,6 +135,16 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
             lastDrawnFrameRef.current = targetFrame;
             drawFrame(targetFrame);
           }
+        },
+        onLeave: () => {
+          setScrollProgress(1);
+          lastDrawnFrameRef.current = totalFrames;
+          drawFrame(totalFrames);
+        },
+        onEnterBack: () => {
+          setScrollProgress(1);
+          lastDrawnFrameRef.current = totalFrames;
+          drawFrame(totalFrames);
         },
       });
     }, container);
