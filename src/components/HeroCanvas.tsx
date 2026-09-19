@@ -96,8 +96,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
-    const isDesktop = window.innerWidth >= 768;
-    const endDistance = isDesktop ? '+=550%' : '+=250%';
+    const endDistance = '+=550%'; // Uniform 550% scroll distance for buttery smooth progression on all devices
 
     const ctx = gsap.context(() => {
       const proxy = { progress: 0 };
@@ -111,7 +110,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           end: endDistance,
           pin: true,
           pinSpacing: true,
-          anticipatePin: isDesktop ? 1 : 0,
+          anticipatePin: 1, // Prevent pinning jump on all devices
           scrub: 2.5, // Genuine 2.5 seconds of buttery smooth inertia applied to the tween
           onLeave: () => {
             setScrollProgress(1);
