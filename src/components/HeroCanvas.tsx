@@ -275,9 +275,9 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         <div className="absolute bottom-0 left-0 right-0 h-[55%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/80 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
 
         <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_8px_30px_rgba(0,0,0,1)]">
-          {/* Eyebrow - Smoked Glass Translucent Capsule */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange/10 border border-safety-orange/30 text-safety-orange shadow-md mb-2.5 sm:mb-4">
-            <span className="w-1.5 h-1.5 rounded-full bg-safety-orange animate-pulse" />
+          {/* Eyebrow - Smoked Glass Translucent Capsule (Solid Orange on Mobile for Contrast) */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange sm:bg-safety-orange/10 border border-safety-orange sm:border-safety-orange/30 text-white sm:text-safety-orange shadow-[0_4px_12px_rgba(255,62,0,0.4)] sm:shadow-md mb-2.5 sm:mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-white sm:bg-safety-orange animate-pulse" />
             <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-wider uppercase font-mono">
               Admissions Open • 2026 Batch
             </span>
