@@ -159,12 +159,12 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
       {/* Gentle Vignette: subtle bottom fade for smooth section transition without dark side washes */}
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/40 via-transparent to-midnight-950/15" />
 
-      {/* PHASE 1 OVERLAY (0% - 25%): Starting Career (Bottom on Mobile, Left-Centered on Desktop) */}
+      {/* PHASE 1 OVERLAY (0% - 25%): Starting Career (Lowered for clear engineer visibility) */}
       <div
-        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-0 sm:items-center justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-300"
+        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-300"
         style={{ opacity: phase1Opacity, visibility: phase1Opacity > 0.02 ? 'visible' : 'hidden' }}
       >
-        {/* Phase 1 Studio Scrim - Seamless bottom-to-top on mobile, left-to-right on desktop */}
+        {/* Phase 1 Studio Scrim */}
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/80 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
         <div className="relative z-10 max-w-md lg:max-w-lg text-left">
@@ -191,12 +191,12 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         </div>
       </div>
 
-      {/* PHASE 2 OVERLAY (35% - 65%): Practical Safety Training (Bottom on Mobile, Right-Centered on Desktop) */}
+      {/* PHASE 2 OVERLAY (35% - 65%): Practical Safety Training (Lowered for clear engineer visibility) */}
       <div
-        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-0 sm:items-center justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-300"
+        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-300"
         style={{ opacity: phase2Opacity, visibility: phase2Opacity > 0.02 ? 'visible' : 'hidden' }}
       >
-        {/* Phase 2 Studio Scrim - Seamless bottom-to-top on mobile, right-to-left on desktop */}
+        {/* Phase 2 Studio Scrim */}
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/80 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
         <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto">
