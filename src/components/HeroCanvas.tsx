@@ -203,9 +203,9 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         style={{ opacity: phase1Opacity, visibility: phase1Opacity > 0.05 ? 'visible' : 'hidden' }}
       >
         {/* Phase 1 Studio Scrim - Strictly restrained to bottom 45% on mobile */}
-        <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/90 via-midnight-950/50 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/70 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
-        <div className="relative z-10 max-w-md lg:max-w-lg text-left drop-shadow-[0_6px_20px_rgba(0,0,0,1)]">
+        <div className="relative z-10 max-w-md lg:max-w-lg text-left drop-shadow-[0_8px_30px_rgba(0,0,0,1)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange/10 border border-safety-orange/30 text-safety-orange shadow-md mb-2 sm:mb-3.5">
             <span className="w-1.5 h-1.5 rounded-full bg-safety-orange animate-pulse" />
@@ -235,9 +235,9 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         style={{ opacity: phase2Opacity, visibility: phase2Opacity > 0.05 ? 'visible' : 'hidden' }}
       >
         {/* Phase 2 Studio Scrim - Strictly restrained to bottom 45% on mobile */}
-        <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/90 via-midnight-950/50 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/70 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
-        <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto drop-shadow-[0_6px_20px_rgba(0,0,0,1)]">
+        <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto drop-shadow-[0_8px_30px_rgba(0,0,0,1)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange/10 border border-safety-orange/30 text-safety-orange shadow-md mb-2 sm:mb-3.5">
             <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-wider uppercase font-mono">
@@ -272,9 +272,9 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         }}
       >
         {/* Phase 3 Studio Scrim - Restrained to bottom 55% on mobile for complete top visual freedom */}
-        <div className="absolute bottom-0 left-0 right-0 h-[55%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/95 via-midnight-950/60 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-[55%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/80 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
 
-        <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_6px_20px_rgba(0,0,0,1)]">
+        <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_8px_30px_rgba(0,0,0,1)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange/10 border border-safety-orange/30 text-safety-orange shadow-md mb-2.5 sm:mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-safety-orange animate-pulse" />
