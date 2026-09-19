@@ -96,15 +96,18 @@ export const WhyChooseUs: React.FC = () => {
                 whileHover={{ y: -6, transition: { duration: 0.25 } }}
                 className="group relative rounded-2xl sm:rounded-3xl bg-white border border-slate-300 p-5 sm:p-8 hover:shadow-2xl hover:border-safety-orange/50 transition-colors duration-300 flex flex-col justify-start shadow-lg shadow-slate-900/8"
               >
-                {/* Icon Container */}
-                <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-orange-100/70 border border-orange-300/80 flex items-center justify-center text-safety-orange mb-4 sm:mb-6 group-hover:scale-110 group-hover:bg-safety-orange group-hover:text-white group-hover:shadow-md transition-all duration-300">
-                  <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
+                {/* Header Row (Icon + Title on Mobile, Stacked on Desktop) */}
+                <div className="flex items-center gap-3.5 mb-3 sm:mb-0 sm:block">
+                  {/* Icon Container */}
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 rounded-xl sm:rounded-2xl bg-orange-100/70 border border-orange-300/80 flex items-center justify-center text-safety-orange sm:mb-6 group-hover:scale-110 group-hover:bg-safety-orange group-hover:text-white group-hover:shadow-md transition-all duration-300">
+                    <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
 
-                {/* Title */}
-                <h3 className="text-lg sm:text-xl font-bold text-slate-950 mb-2 sm:mb-3 group-hover:text-safety-orange transition-colors leading-snug">
-                  {item.title}
-                </h3>
+                  {/* Title */}
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-950 sm:mb-3 group-hover:text-safety-orange transition-colors leading-tight">
+                    {item.title}
+                  </h3>
+                </div>
 
                 {/* Description */}
                 <p className="text-xs sm:text-sm text-slate-800 leading-relaxed font-normal">
