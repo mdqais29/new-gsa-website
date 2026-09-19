@@ -8,6 +8,24 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ onOpenEnroll }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (target) {
+        const headerOffset = 80;
+        const elementPosition = target.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+      setMobileMenuOpen(false);
+    }
+  };
+
   const navLinks = [
     { name: 'Home', href: '#hero' },
     { name: 'Courses', href: '#courses' },
@@ -38,6 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenEnroll }) => {
             <a
               key={link.name}
               href={link.href}
+              onClick={(e) => handleNavClick(e, link.href)}
               className="text-xs lg:text-sm font-bold transition-all duration-200 tracking-wide px-3.5 py-1.5 rounded-full text-slate-950 hover:text-safety-orange hover:bg-orange-50"
             >
               {link.name}
@@ -91,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenEnroll }) => {
               <a
                 key={link.name}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => handleNavClick(e, link.href)}
                 className="px-4 py-2.5 text-sm font-bold rounded-xl transition-all text-slate-950 hover:text-safety-orange hover:bg-orange-50"
               >
                 {link.name}

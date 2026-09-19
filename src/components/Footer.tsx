@@ -6,6 +6,23 @@ export const Footer: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const target = document.querySelector(href);
+      if (target) {
+        const headerOffset = 80;
+        const elementPosition = target.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    }
+  };
+
   const quickLinks = [
     { name: 'Home', href: '#hero' },
     { name: 'Courses', href: '#courses' },
@@ -74,6 +91,7 @@ export const Footer: React.FC = () => {
                   <li key={link.name}>
                     <a
                       href={link.href}
+                      onClick={(e) => handleNavClick(e, link.href)}
                       className="text-slate-300 hover:text-safety-orange transition-colors inline-block"
                     >
                       {link.name}
