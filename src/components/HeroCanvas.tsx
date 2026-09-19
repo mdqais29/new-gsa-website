@@ -96,7 +96,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     if (!container || !canvas) return;
 
     const isDesktop = window.innerWidth >= 768;
-    const endDistance = isDesktop ? '+=550%' : '+=320%';
+    const endDistance = isDesktop ? '+=550%' : '+=250%';
 
     const ctx = gsap.context(() => {
       ScrollTrigger.create({
@@ -106,7 +106,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         pin: true,
         pinSpacing: true,
         anticipatePin: isDesktop ? 1 : 0,
-        scrub: isDesktop ? 0.5 : 0.1,
+        scrub: isDesktop ? 0.5 : true,
         onUpdate: (self) => {
           const progress = self.progress;
           setScrollProgress(progress);

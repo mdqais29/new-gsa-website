@@ -23,6 +23,9 @@ export function useLenis() {
     // Running Lenis on mobile touch hijacks touch gestures, fights native inertia,
     // and causes GSAP pin-spacers to lock or snap back to 0 on slow scrolling.
     if (isTouchDevice) {
+      // Use GSAP's native normalizer on touch devices to completely stabilize 
+      // 100dvh layout shifts, address bar toggles, and prevent pull-to-refresh conflicts.
+      ScrollTrigger.normalizeScroll(true);
       return;
     }
 

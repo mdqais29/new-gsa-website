@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const TOTAL_FRAMES = 600;
 
@@ -88,7 +88,7 @@ export function useHeroFrames() {
   }, []);
 
   // Helper to get nearest loaded frame to avoid any blank flicker
-  const getNearestFrame = (targetIndex: number): HTMLImageElement | null => {
+  const getNearestFrame = useCallback((targetIndex: number): HTMLImageElement | null => {
     const clamped = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(targetIndex)));
     const images = imagesRef.current;
 
@@ -137,7 +137,7 @@ export function useHeroFrames() {
     }
 
     return images[1] || null;
-  };
+  }, []);
 
   return {
     totalFrames: TOTAL_FRAMES,
