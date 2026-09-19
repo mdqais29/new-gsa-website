@@ -100,16 +100,32 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     const endDistance = isDesktop ? '+=550%' : '+=250%';
 
     const ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: container,
-        start: 'top top',
-        end: endDistance,
-        pin: true,
-        pinSpacing: true,
-        anticipatePin: isDesktop ? 1 : 0,
-        scrub: 2.5, // 2.5 seconds of luxurious cinematic momentum (increased per user request)
-        onUpdate: (self) => {
-          const progress = self.progress;
+      const proxy = { progress: 0 };
+
+      gsap.to(proxy, {
+        progress: 1,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: container,
+          start: 'top top',
+          end: endDistance,
+          pin: true,
+          pinSpacing: true,
+          anticipatePin: isDesktop ? 1 : 0,
+          scrub: 2.5, // Genuine 2.5 seconds of buttery smooth inertia applied to the tween
+          onLeave: () => {
+            setScrollProgress(1);
+            lastDrawnFrameRef.current = totalFrames;
+            drawFrame(totalFrames);
+          },
+          onEnterBack: () => {
+            setScrollProgress(1);
+            lastDrawnFrameRef.current = totalFrames;
+            drawFrame(totalFrames);
+          },
+        },
+        onUpdate: () => {
+          const progress = proxy.progress;
           setScrollProgress(progress);
 
           // Firmly lock to final frame when approaching or reaching the end of the scroll
@@ -136,16 +152,6 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
             lastDrawnFrameRef.current = targetFrame;
             drawFrame(targetFrame);
           }
-        },
-        onLeave: () => {
-          setScrollProgress(1);
-          lastDrawnFrameRef.current = totalFrames;
-          drawFrame(totalFrames);
-        },
-        onEnterBack: () => {
-          setScrollProgress(1);
-          lastDrawnFrameRef.current = totalFrames;
-          drawFrame(totalFrames);
         },
       });
     }, container);
