@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, HardHat, Flame, Building2, Compass, GraduationCap } from 'lucide-react';
+import { HardHat, Flame, Building2, Compass, GraduationCap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export const AboutFieldProof: React.FC = () => {

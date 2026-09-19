@@ -100,20 +100,36 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     const endDistance = isDesktop ? '+=550%' : '+=250%';
 
     const ctx = gsap.context(() => {
-      ScrollTrigger.create({
-        trigger: container,
-        start: 'top top',
-        end: endDistance,
-        pin: true,
-        pinSpacing: true,
-        anticipatePin: isDesktop ? 1 : 0,
-        scrub: 2.5, // 2.5s gives the luxurious cinematic glide the user explicitly prefers
-        onUpdate: (self) => {
-          const progress = self.progress;
+      const proxy = { progress: 0 };
+
+      gsap.to(proxy, {
+        progress: 1,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: container,
+          start: 'top top',
+          end: endDistance,
+          pin: true,
+          pinSpacing: true,
+          anticipatePin: isDesktop ? 1 : 0,
+          scrub: 2.5, // Genuine 2.5 seconds of buttery smooth inertia applied to the tween
+          onLeave: () => {
+            setScrollProgress(1);
+            lastDrawnFrameRef.current = totalFrames;
+            drawFrame(totalFrames);
+          },
+          onEnterBack: () => {
+            setScrollProgress(1);
+            lastDrawnFrameRef.current = totalFrames;
+            drawFrame(totalFrames);
+          },
+        },
+        onUpdate: () => {
+          const progress = proxy.progress;
           setScrollProgress(progress);
 
           // Firmly lock to final frame when approaching or reaching the end of the scroll
-          if (progress >= 0.98) {
+          if (progress > 0.999) {
             if (lastDrawnFrameRef.current !== totalFrames) {
               lastDrawnFrameRef.current = totalFrames;
               drawFrame(totalFrames);
@@ -121,31 +137,24 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
             return;
           }
 
-          // Hysteresis threshold to completely eliminate frame oscillation/jitter when stopping
-          const rawTarget = 1 + progress * (totalFrames - 1);
-          const current = lastDrawnFrameRef.current;
-          let targetFrame = current;
-
-          if (rawTarget > current + 0.55) {
-            targetFrame = Math.min(totalFrames, Math.floor(rawTarget));
-          } else if (rawTarget < current - 0.55) {
-            targetFrame = Math.max(1, Math.ceil(rawTarget));
+          // Force frame 1 at the very beginning to prevent any visual gap
+          if (progress < 0.001) {
+            if (lastDrawnFrameRef.current !== 1) {
+              lastDrawnFrameRef.current = 1;
+              drawFrame(1);
+            }
+            return;
           }
 
-          if (targetFrame !== current) {
+          // Calculate target frame
+          const exactFrame = 1 + progress * (totalFrames - 1);
+          // Use Math.round for smoother frame transitions instead of floor
+          const targetFrame = Math.max(1, Math.min(totalFrames, Math.round(exactFrame)));
+
+          if (targetFrame !== lastDrawnFrameRef.current) {
             lastDrawnFrameRef.current = targetFrame;
             drawFrame(targetFrame);
           }
-        },
-        onLeave: () => {
-          setScrollProgress(1);
-          lastDrawnFrameRef.current = totalFrames;
-          drawFrame(totalFrames);
-        },
-        onEnterBack: () => {
-          setScrollProgress(1);
-          lastDrawnFrameRef.current = totalFrames;
-          drawFrame(totalFrames);
         },
       });
     }, container);
