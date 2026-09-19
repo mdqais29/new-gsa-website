@@ -240,11 +240,11 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
         <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto drop-shadow-[0_6px_20px_rgba(0,0,0,1)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-orange-200 shadow-md mb-2 sm:mb-3.5">
-            <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-widest text-[#C83400] uppercase font-mono">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange/10 border border-safety-orange/30 text-safety-orange shadow-md mb-2 sm:mb-3.5">
+            <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-wider uppercase font-mono">
               Practical Safety Training
             </span>
-            <span className="w-2 h-2 rounded-full bg-[#FF3E00] animate-pulse" />
+            <span className="w-1.5 h-1.5 rounded-full bg-safety-orange animate-pulse" />
           </div>
 
           {/* Clean, Crisp Headline */}
@@ -277,9 +277,9 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
         <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_6px_20px_rgba(0,0,0,1)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-orange-200 shadow-md mb-2.5 sm:mb-4">
-            <span className="w-2 h-2 rounded-full bg-[#FF3E00] animate-pulse" />
-            <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-widest text-[#C83400] uppercase font-mono">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange/10 border border-safety-orange/30 text-safety-orange shadow-md mb-2.5 sm:mb-4">
+            <span className="w-1.5 h-1.5 rounded-full bg-safety-orange animate-pulse" />
+            <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-wider uppercase font-mono">
               Admissions Open • 2026 Batch
             </span>
           </div>
