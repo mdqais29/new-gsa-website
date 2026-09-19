@@ -199,11 +199,11 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
       {/* PHASE 1 OVERLAY (0% - 28%): Starting Career */}
       <div
-        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
+        className="absolute inset-0 z-30 flex items-end pb-14 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
         style={{ opacity: phase1Opacity, visibility: phase1Opacity > 0.05 ? 'visible' : 'hidden' }}
       >
-        {/* Phase 1 Studio Scrim - Strictly restrained to bottom 35% on mobile */}
-        <div className="absolute bottom-0 left-0 right-0 h-[38%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/80 via-midnight-950/40 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
+        {/* Phase 1 Studio Scrim - Strictly restrained to bottom 45% on mobile */}
+        <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/90 via-midnight-950/50 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
         <div className="relative z-10 max-w-md lg:max-w-lg text-left drop-shadow-[0_6px_20px_rgba(0,0,0,1)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
@@ -231,11 +231,11 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
       {/* PHASE 2 OVERLAY (29% - 62%): Practical Safety Training */}
       <div
-        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
+        className="absolute inset-0 z-30 flex items-end pb-14 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
         style={{ opacity: phase2Opacity, visibility: phase2Opacity > 0.05 ? 'visible' : 'hidden' }}
       >
-        {/* Phase 2 Studio Scrim - Strictly restrained to bottom 35% on mobile */}
-        <div className="absolute bottom-0 left-0 right-0 h-[38%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/80 via-midnight-950/40 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
+        {/* Phase 2 Studio Scrim - Strictly restrained to bottom 45% on mobile */}
+        <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/90 via-midnight-950/50 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
         <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto drop-shadow-[0_6px_20px_rgba(0,0,0,1)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
@@ -263,7 +263,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
       {/* PHASE 3 OVERLAY (63% - 100%): Fixed Hero Lockup (Solid, Crisp & Instant) */}
       <div
-        className={`absolute inset-0 z-30 flex items-end pb-8 sm:pb-0 sm:items-center justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 transition-opacity duration-150 ${
+        className={`absolute inset-0 z-30 flex items-end pb-12 sm:pb-0 sm:items-center justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 transition-opacity duration-150 ${
           isPhase3Active ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
         style={{
@@ -271,8 +271,8 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           visibility: phase3Opacity > 0.05 ? 'visible' : 'hidden',
         }}
       >
-        {/* Phase 3 Studio Scrim - Restrained to bottom 46% on mobile for complete top visual freedom */}
-        <div className="absolute bottom-0 left-0 right-0 h-[48%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/90 via-midnight-950/50 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
+        {/* Phase 3 Studio Scrim - Restrained to bottom 55% on mobile for complete top visual freedom */}
+        <div className="absolute bottom-0 left-0 right-0 h-[55%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/95 via-midnight-950/60 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
 
         <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_6px_20px_rgba(0,0,0,1)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
