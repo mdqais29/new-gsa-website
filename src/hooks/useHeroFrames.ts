@@ -30,7 +30,7 @@ export function useHeroFrames() {
     const secondaryIndices: number[] = [];
 
     for (let i = 2; i <= TOTAL_FRAMES; i++) {
-      if (i <= 60 || i % 4 === 0) {
+      if (i <= 30 || i % 10 === 0) {
         priorityIndices.push(i);
       } else {
         secondaryIndices.push(i);
@@ -84,11 +84,11 @@ export function useHeroFrames() {
       });
     };
 
-    // Chain the loading: Load priority frames first, then load secondary frames VERY slowly in the background
-    loadBatch(priorityIndices, 4).then(() => {
+    // Chain the loading: Load priority frames first (sparse skeleton for instant fast-scroll coverage)
+    loadBatch(priorityIndices, 6).then(() => {
       if (isMounted) {
-        // Concurrency 2, with 50ms delay between requests to free up the network for other assets
-        loadBatch(secondaryIndices, 2, 50);
+        // Fill in the gaps quickly but yield the main thread slightly (10ms)
+        loadBatch(secondaryIndices, 4, 10);
       }
     });
 
