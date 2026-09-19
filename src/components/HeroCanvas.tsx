@@ -129,27 +129,29 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     return () => ctx.revert();
   }, [totalFrames, drawFrame]);
 
-  // Phase Opacity Calculations - Calibrated for generous holding time & smooth reads
-  // Phase 1: 0% - 22% (solid until 18%, gracefully fades out by 26%)
-  const phase1Opacity = scrollProgress <= 0.20 
+  // Phase Opacity Calculations - Fast, Clean, Snappy Transitions (No lingering blurry states)
+  // Phase 1: 0% - 28% (Rock solid 1.0, quick 0.03 exit)
+  const phase1Opacity = scrollProgress <= 0.25 
     ? 1 
-    : Math.max(0, 1 - (scrollProgress - 0.20) / 0.08);
+    : Math.max(0, 1 - (scrollProgress - 0.25) / 0.03);
 
-  // Phase 2: 28% - 64% (fades in 28%-36%, solid hold 36%-56%, fades out 56%-64%)
+  // Phase 2: 29% - 62% (Quick 0.03 entrance, Rock solid 1.0, quick 0.03 exit)
   let phase2Opacity = 0;
-  if (scrollProgress >= 0.26 && scrollProgress <= 0.65) {
-    if (scrollProgress < 0.35) {
-      phase2Opacity = (scrollProgress - 0.26) / 0.09;
-    } else if (scrollProgress > 0.56) {
-      phase2Opacity = Math.max(0, 1 - (scrollProgress - 0.56) / 0.09);
+  if (scrollProgress >= 0.28 && scrollProgress <= 0.62) {
+    if (scrollProgress < 0.31) {
+      phase2Opacity = (scrollProgress - 0.28) / 0.03;
+    } else if (scrollProgress > 0.58) {
+      phase2Opacity = Math.max(0, 1 - (scrollProgress - 0.58) / 0.03);
     } else {
       phase2Opacity = 1;
     }
   }
 
-  // Phase 3: 65% - 100% Fixed Hero Lockup (fades in 65%-75%, remains firmly locked & interactable)
-  const phase3Progress = Math.max(0, Math.min(1, (scrollProgress - 0.65) / 0.10));
-  const isPhase3Active = scrollProgress >= 0.65;
+  // Phase 3: 63% - 100% (Quick 0.03 entrance, 100% solid lockup with zero blur)
+  const phase3Opacity = scrollProgress >= 0.62
+    ? Math.min(1, (scrollProgress - 0.62) / 0.03)
+    : 0;
+  const isPhase3Active = scrollProgress >= 0.62;
 
   return (
     <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100dvh] overflow-hidden bg-midnight-950">
@@ -163,17 +165,17 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
       {/* Gentle Vignette: subtle bottom fade for smooth section transition without dark side washes */}
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950/40 via-transparent to-midnight-950/15" />
 
-      {/* PHASE 1 OVERLAY (0% - 25%): Starting Career (Lowered for clear engineer visibility) */}
+      {/* PHASE 1 OVERLAY (0% - 28%): Starting Career */}
       <div
-        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-300"
-        style={{ opacity: phase1Opacity, visibility: phase1Opacity > 0.02 ? 'visible' : 'hidden' }}
+        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
+        style={{ opacity: phase1Opacity, visibility: phase1Opacity > 0.05 ? 'visible' : 'hidden' }}
       >
         {/* Phase 1 Studio Scrim */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/80 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/85 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
-        <div className="relative z-10 max-w-md lg:max-w-lg text-left">
+        <div className="relative z-10 max-w-md lg:max-w-lg text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-midnight-950/65 backdrop-blur-md border border-white/20 shadow-md mb-2 sm:mb-3.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-midnight-950/80 backdrop-blur-md border border-white/20 shadow-md mb-2 sm:mb-3.5">
             <span className="w-2 h-2 rounded-full bg-[#FF3E00] animate-pulse" />
             <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-widest text-[#FF3E00] uppercase font-mono">
               Start Your Journey
@@ -195,17 +197,17 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         </div>
       </div>
 
-      {/* PHASE 2 OVERLAY (35% - 65%): Practical Safety Training (Lowered for clear engineer visibility) */}
+      {/* PHASE 2 OVERLAY (29% - 62%): Practical Safety Training */}
       <div
-        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-300"
-        style={{ opacity: phase2Opacity, visibility: phase2Opacity > 0.02 ? 'visible' : 'hidden' }}
+        className="absolute inset-0 z-30 flex items-end pb-10 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
+        style={{ opacity: phase2Opacity, visibility: phase2Opacity > 0.05 ? 'visible' : 'hidden' }}
       >
         {/* Phase 2 Studio Scrim */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/80 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/85 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
 
-        <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto">
+        <div className="relative z-10 max-w-md lg:max-w-lg text-left sm:text-right sm:ml-auto drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-midnight-950/65 backdrop-blur-md border border-white/20 shadow-md mb-2 sm:mb-3.5">
+          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-midnight-950/80 backdrop-blur-md border border-white/20 shadow-md mb-2 sm:mb-3.5">
             <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-widest text-[#FF3E00] uppercase font-mono">
               Practical Safety Training
             </span>
@@ -227,23 +229,22 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         </div>
       </div>
 
-      {/* PHASE 3 OVERLAY (75% - 100%): Fixed Hero Lockup (Bottom on Mobile, Left-Centered on Desktop) */}
+      {/* PHASE 3 OVERLAY (63% - 100%): Fixed Hero Lockup (Solid, Crisp & Instant) */}
       <div
-        className={`absolute inset-0 z-30 flex items-end pb-8 sm:pb-0 sm:items-center justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 transition-all duration-500 ${
+        className={`absolute inset-0 z-30 flex items-end pb-8 sm:pb-0 sm:items-center justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 transition-opacity duration-150 ${
           isPhase3Active ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
         style={{
-          opacity: phase3Progress,
-          transform: `scale(${0.97 + phase3Progress * 0.03}) translateY(${(1 - phase3Progress) * 16}px)`,
-          visibility: phase3Progress > 0.05 ? 'visible' : 'hidden',
+          opacity: phase3Opacity,
+          visibility: phase3Opacity > 0.05 ? 'visible' : 'hidden',
         }}
       >
-        {/* Phase 3 Studio Scrim - Seamless bottom-to-top on mobile, left-to-right on desktop */}
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/90 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
+        {/* Phase 3 Studio Scrim - Deep high-contrast bottom-to-top gradient for razor-sharp readability */}
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-midnight-950 via-midnight-950/95 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
 
-        <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left">
+        <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
           {/* Eyebrow - Smoked Glass Translucent Capsule */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-midnight-950/65 backdrop-blur-md border border-white/20 shadow-md mb-2.5 sm:mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-midnight-950/80 backdrop-blur-md border border-white/20 shadow-md mb-2.5 sm:mb-4">
             <span className="w-2 h-2 rounded-full bg-[#FF3E00] animate-pulse" />
             <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-widest text-[#FF3E00] uppercase font-mono">
               Admissions Open • 2026 Batch
