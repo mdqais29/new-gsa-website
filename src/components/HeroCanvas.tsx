@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useHeroVideo } from '../hooks/useHeroVideo';
 import { Phone, ArrowRight, ShieldCheck, Award, Briefcase } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -12,9 +11,7 @@ interface HeroCanvasProps {
 
 export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const { setProgress, waitForReady } = useHeroVideo(canvasRef);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   // Phase overlay refs — direct DOM manipulation, zero React re-renders during scroll
   const phase1Ref = useRef<HTMLDivElement>(null);
@@ -53,84 +50,93 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     }
   }, []);
 
-  // Initial setup
-  useEffect(() => {
-    waitForReady(() => {
-      setProgress(0);
-    });
+  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
+  const videoSrc = isMobile ? '/hero-mobile.mp4' : '/hero.mp4';
 
-    // Initial resize handling
-    const handleResize = () => {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-    };
-    
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [waitForReady, setProgress]);
-
-  // GSAP ScrollTrigger — updates frame and overlays based on scroll position
   useEffect(() => {
     const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return;
+    const video = videoRef.current;
+    if (!container || !video) return;
 
-    const endDistance = '+=550%';
+    video.muted = true;
+    video.playsInline = true;
+    video.pause();
 
-    const ctx = gsap.context(() => {
-      const proxy = { progress: 0 };
+    let ctx: gsap.Context | null = null;
+    let isInitialized = false;
 
-      gsap.to(proxy, {
-        progress: 1,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: container,
-          start: 'top top',
-          end: endDistance,
-          pin: true,
-          pinSpacing: true,
-          anticipatePin: 1,
-          scrub: 1.5, // Universal 1.5s buttery glide momentum for all devices
-          onLeave: () => {
-            scrollProgressRef.current = 1;
-            updateOverlays(1);
+    const initScrollTrigger = () => {
+      if (isInitialized) return;
+      isInitialized = true;
+
+      const duration = video.duration && !isNaN(video.duration) && video.duration > 0 ? video.duration : 20;
+      const maxTime = Math.max(0, duration - 0.05);
+
+      ctx = gsap.context(() => {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: container,
+            start: 'top top',
+            end: '+=550%',
+            pin: true,
+            pinSpacing: true,
+            anticipatePin: 1,
+            scrub: 1.2, // 1.2s buttery smooth momentum glide
+            onLeave: () => {
+              scrollProgressRef.current = 1;
+              updateOverlays(1);
+            },
+            onLeaveBack: () => {
+              scrollProgressRef.current = 0;
+              updateOverlays(0);
+            },
+            onUpdate: (self) => {
+              scrollProgressRef.current = self.progress;
+              updateOverlays(self.progress);
+            },
           },
-          onLeaveBack: () => {
-            scrollProgressRef.current = 0;
-            updateOverlays(0);
-          },
-          onUpdate: (self) => {
-            const progress = self.progress;
-            scrollProgressRef.current = progress;
-            updateOverlays(progress);
-            setProgress(progress); // Let the robust video hook handle safe debounced seeking
-          },
-        },
-      });
-    }, container);
+        });
 
-    return () => ctx.revert();
-  }, [updateOverlays, setProgress]);
+        tl.fromTo(
+          video,
+          { currentTime: 0 },
+          { currentTime: maxTime, ease: 'none' }
+        );
+      }, container);
+    };
+
+    if (video.readyState >= 1) {
+      initScrollTrigger();
+    } else {
+      video.addEventListener('loadedmetadata', initScrollTrigger, { once: true });
+      video.addEventListener('canplay', initScrollTrigger, { once: true });
+      video.load();
+    }
+
+    // Safety fallback in case metadata event already fired
+    const fallbackTimer = setTimeout(() => {
+      initScrollTrigger();
+    }, 600);
+
+    return () => {
+      clearTimeout(fallbackTimer);
+      if (ctx) ctx.revert();
+    };
+  }, [updateOverlays]);
 
   return (
     <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100vh] overflow-hidden bg-midnight-950">
-      {/* HTML5 Canvas Background */}
-      <canvas
-        ref={canvasRef}
+      {/* Background Video — Direct GPU Hardware Accelerated */}
+      <video
+        ref={videoRef}
+        key={videoSrc}
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        style={{ 
-          display: 'block',
-          backgroundImage: 'url(/hero-poster.webp)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
+        playsInline
+        muted
+        preload="auto"
+        poster="/hero-poster.webp"
+        src={videoSrc}
+        style={{ display: 'block' }}
       />
 
       {/* Gentle Vignette: Desktop only */}

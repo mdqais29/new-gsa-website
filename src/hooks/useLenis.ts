@@ -13,18 +13,12 @@ ScrollTrigger.config({
 
 export function useLenis() {
   useEffect(() => {
-    // Detect mobile touch devices
-    const isTouchDevice =
-      'ontouchstart' in window ||
-      navigator.maxTouchPoints > 0 ||
-      window.innerWidth < 768;
+    // Only disable Lenis on small mobile touchscreens (phones),
+    // NEVER on PC / laptops that happen to report touch points (e.g. Windows laptops with touchscreens)!
+    const isMobilePhone =
+      window.innerWidth < 768 && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-    // On mobile touch devices, allow 100% native hardware-accelerated scrolling.
-    // Running Lenis on mobile touch hijacks touch gestures, fights native inertia,
-    // and causes GSAP pin-spacers to lock or snap back to 0 on slow scrolling.
-    if (isTouchDevice) {
-      // Return early to allow pure native touch scrolling (restores pull-to-refresh).
-      // GSAP ScrollTrigger.config({ ignoreMobileResize: true }) handles the rest.
+    if (isMobilePhone) {
       return;
     }
 
