@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useHeroFrames } from '../hooks/useHeroFrames';
+import { useHeroVideo } from '../hooks/useHeroVideo';
 import { Phone, ArrowRight, ShieldCheck, Award, Briefcase } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -14,7 +14,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const { totalFrames, getNearestFrame, setTargetFrame, waitForInitial, onRedraw } = useHeroFrames();
+  const { setProgress, waitForReady } = useHeroVideo(canvasRef);
 
   // Phase overlay refs — direct DOM manipulation, zero React re-renders during scroll
   const phase1Ref = useRef<HTMLDivElement>(null);
@@ -53,55 +53,19 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     }
   }, []);
 
-  // Initial setup: wait for frames ready, set initial frame
+  // Initial setup
   useEffect(() => {
-    waitForInitial(() => {
-      const canvas = canvasRef.current;
-      if (canvas) {
-        setTargetFrame(1);
-      }
+    waitForReady(() => {
+      setProgress(0);
     });
-  }, [waitForInitial, setTargetFrame]);
-
-  // Draw frame to canvas logic
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d', { alpha: false });
-    if (!ctx) return;
-
-    const drawFrame = (frameIndex: number) => {
-      const img = getNearestFrame(frameIndex);
-      if (!img) return;
-
-      const canvasRatio = canvas.width / canvas.height;
-      const imgRatio = img.width / img.height;
-
-      let drawWidth = canvas.width;
-      let drawHeight = canvas.height;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      if (canvasRatio > imgRatio) {
-        drawHeight = canvas.width / imgRatio;
-        offsetY = (canvas.height - drawHeight) / 2;
-      } else {
-        drawWidth = canvas.height * imgRatio;
-        offsetX = (canvas.width - drawWidth) / 2;
-      }
-
-      ctx.fillStyle = '#0a0a0f'; // Dark background
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-    };
-
-    // Redraw whenever a new frame loads
-    onRedraw(drawFrame);
 
     // Initial resize handling
     const handleResize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const canvas = canvasRef.current;
+      if (canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
     };
     
     handleResize();
@@ -110,7 +74,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [getNearestFrame, onRedraw]);
+  }, [waitForReady, setProgress]);
 
   // GSAP ScrollTrigger — updates frame and overlays based on scroll position
   useEffect(() => {
@@ -146,40 +110,14 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
             const progress = self.progress;
             scrollProgressRef.current = progress;
             updateOverlays(progress);
-
-            const targetFrame = Math.max(1, Math.min(totalFrames, Math.round(progress * totalFrames)));
-            setTargetFrame(targetFrame);
-
-            const ctx = canvas.getContext('2d', { alpha: false });
-            const img = getNearestFrame(targetFrame);
-            if (ctx && img) {
-              const canvasRatio = canvas.width / canvas.height;
-              const imgRatio = img.width / img.height;
-
-              let drawWidth = canvas.width;
-              let drawHeight = canvas.height;
-              let offsetX = 0;
-              let offsetY = 0;
-
-              if (canvasRatio > imgRatio) {
-                drawHeight = canvas.width / imgRatio;
-                offsetY = (canvas.height - drawHeight) / 2;
-              } else {
-                drawWidth = canvas.height * imgRatio;
-                offsetX = (canvas.width - drawWidth) / 2;
-              }
-
-              ctx.fillStyle = '#0a0a0f';
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-              ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-            }
+            setProgress(progress); // Let the robust video hook handle safe debounced seeking
           },
         },
       });
     }, container);
 
     return () => ctx.revert();
-  }, [updateOverlays, totalFrames, setTargetFrame, getNearestFrame]);
+  }, [updateOverlays, setProgress]);
 
   return (
     <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100vh] overflow-hidden bg-midnight-950">
