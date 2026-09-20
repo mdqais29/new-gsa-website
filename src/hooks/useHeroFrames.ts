@@ -37,7 +37,9 @@ export function useHeroFrames() {
     img.onload = () => {
       loadedFramesRef.current.set(indexToLoad, img);
       isCurrentlyLoadingRef.current = false;
-      redrawCallbacks.current.forEach(cb => cb(indexToLoad));
+      // Tell the canvas to redraw the CURRENT target frame (not the one that just loaded), 
+      // in case the one that just loaded is a better match for our current scroll position!
+      redrawCallbacks.current.forEach(cb => cb(currentTargetRef.current));
       
       if (indexToLoad === 1) {
         initialReadyCallbacks.current.forEach(cb => cb());
