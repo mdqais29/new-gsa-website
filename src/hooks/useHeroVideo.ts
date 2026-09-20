@@ -43,7 +43,7 @@ export function useHeroVideo(canvasRef: React.RefObject<HTMLCanvasElement>) {
     };
   }, []);
 
-  // Safe seek function that prevents decoder choking on mobile
+  // Safe seek function that prevents decoder choking
   const processSeekQueue = useCallback(() => {
     const video = videoRef.current;
     if (!video || !isReadyRef.current || isNaN(video.duration)) {
@@ -53,59 +53,58 @@ export function useHeroVideo(canvasRef: React.RefObject<HTMLCanvasElement>) {
 
     const targetTime = targetProgressRef.current * video.duration;
     
-    // CRITICAL: Never spam currentTime if the video is already seeking.
-    // This is the #1 cause of mobile "stucking/lagging" during GSAP scrubs.
     if (!video.seeking) {
-      // Only seek if we actually moved a tiny bit to avoid useless micro-seeks
       if (Math.abs(video.currentTime - targetTime) > 0.01) {
         video.currentTime = targetTime;
       }
     }
     
-    // Check again next frame
     requestAnimationFrame(processSeekQueue);
   }, []);
 
-  // Continuous draw loop to ensure canvas always reflects the latest decoded video frame
-  const drawLoop = useCallback(() => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    
-    if (video && canvas && isReadyRef.current && video.readyState >= 2) {
-      const ctx = canvas.getContext('2d', { alpha: false });
-      if (ctx) {
-        const canvasRatio = canvas.width / canvas.height;
-        const videoRatio = video.videoWidth / video.videoHeight;
-
-        let drawWidth = canvas.width;
-        let drawHeight = canvas.height;
-        let offsetX = 0;
-        let offsetY = 0;
-
-        if (canvasRatio > videoRatio) {
-          drawHeight = canvas.width / videoRatio;
-          offsetY = (canvas.height - drawHeight) / 2;
-        } else {
-          drawWidth = canvas.height * videoRatio;
-          offsetX = (canvas.width - drawWidth) / 2;
-        }
-
-        ctx.fillStyle = '#0a0a0f';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
-      }
-    }
-    requestAnimationFrame(drawLoop);
-  }, [canvasRef]);
-
+  // Draw EXACTLY when the video has finished seeking to a new frame.
+  // Drawing in a blind requestAnimationFrame loop causes horrific jitter because 
+  // it draws stale frames while the video decoder is still working asynchronously.
   useEffect(() => {
-    const seekId = requestAnimationFrame(processSeekQueue);
-    const drawId = requestAnimationFrame(drawLoop);
-    return () => {
-      cancelAnimationFrame(seekId);
-      cancelAnimationFrame(drawId);
+    const video = videoRef.current;
+    if (!video) return;
+
+    const drawToCanvas = () => {
+      const canvas = canvasRef.current;
+      if (video && canvas && isReadyRef.current && video.readyState >= 2) {
+        const ctx = canvas.getContext('2d', { alpha: false });
+        if (ctx) {
+          const canvasRatio = canvas.width / canvas.height;
+          const videoRatio = video.videoWidth / video.videoHeight;
+
+          let drawWidth = canvas.width;
+          let drawHeight = canvas.height;
+          let offsetX = 0;
+          let offsetY = 0;
+
+          if (canvasRatio > videoRatio) {
+            drawHeight = canvas.width / videoRatio;
+            offsetY = (canvas.height - drawHeight) / 2;
+          } else {
+            drawWidth = canvas.height * videoRatio;
+            offsetX = (canvas.width - drawWidth) / 2;
+          }
+
+          ctx.fillStyle = '#0a0a0f';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight);
+        }
+      }
     };
-  }, [processSeekQueue, drawLoop]);
+
+    video.addEventListener('seeked', drawToCanvas);
+    
+    const seekId = requestAnimationFrame(processSeekQueue);
+    return () => {
+      video.removeEventListener('seeked', drawToCanvas);
+      cancelAnimationFrame(seekId);
+    };
+  }, [processSeekQueue, canvasRef]);
 
   return {
     setProgress: useCallback((progress: number) => {
