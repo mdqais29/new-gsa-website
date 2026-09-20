@@ -20,46 +20,44 @@ export function useHeroFrames() {
     return loadedFramesRef.current.get(1) || null;
   }, []);
 
+  const activeLoadsRef = useRef(0);
+  const MAX_CONCURRENT = 5;
+
   const loadNextInQueue = useCallback(() => {
-    if (isCurrentlyLoadingRef.current || loadingQueueRef.current.length === 0) return;
-    
-    // Prioritize frames near the current target
-    loadingQueueRef.current.sort((a, b) => {
-      return Math.abs(a - currentTargetRef.current) - Math.abs(b - currentTargetRef.current);
-    });
+    while (activeLoadsRef.current < MAX_CONCURRENT && loadingQueueRef.current.length > 0) {
+      // Prioritize frames near the current target
+      loadingQueueRef.current.sort((a, b) => {
+        return Math.abs(a - currentTargetRef.current) - Math.abs(b - currentTargetRef.current);
+      });
 
-    const indexToLoad = loadingQueueRef.current.shift()!;
-    isCurrentlyLoadingRef.current = true;
+      const indexToLoad = loadingQueueRef.current.shift()!;
+      activeLoadsRef.current++;
 
-    const img = new Image();
-    const paddedIndex = String(indexToLoad).padStart(3, '0');
-    
-    img.onload = () => {
-      loadedFramesRef.current.set(indexToLoad, img);
-      isCurrentlyLoadingRef.current = false;
-      // Tell the canvas to redraw the CURRENT target frame (not the one that just loaded), 
-      // in case the one that just loaded is a better match for our current scroll position!
-      redrawCallbacks.current.forEach(cb => cb(currentTargetRef.current));
+      const img = new Image();
+      const paddedIndex = String(indexToLoad).padStart(3, '0');
       
-      if (indexToLoad === 1) {
-        initialReadyCallbacks.current.forEach(cb => cb());
-        initialReadyCallbacks.current = [];
-      }
+      img.onload = () => {
+        loadedFramesRef.current.set(indexToLoad, img);
+        activeLoadsRef.current--;
+        
+        // Redraw current target if this newly loaded frame is better
+        redrawCallbacks.current.forEach(cb => cb(currentTargetRef.current));
+        
+        if (indexToLoad === 1) {
+          initialReadyCallbacks.current.forEach(cb => cb());
+          initialReadyCallbacks.current = [];
+        }
+        
+        loadNextInQueue();
+      };
       
-      // Load next frame immediately
-      if (window.requestIdleCallback) {
-        window.requestIdleCallback(() => loadNextInQueue());
-      } else {
-        setTimeout(loadNextInQueue, 0);
-      }
-    };
-    
-    img.onerror = () => {
-      isCurrentlyLoadingRef.current = false;
-      loadNextInQueue();
-    };
+      img.onerror = () => {
+        activeLoadsRef.current--;
+        loadNextInQueue();
+      };
 
-    img.src = `/frames-optimized/frame_${paddedIndex}.webp`;
+      img.src = `/frames-optimized/frame_${paddedIndex}.webp`;
+    }
   }, []);
 
   useEffect(() => {
