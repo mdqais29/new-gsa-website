@@ -77,6 +77,8 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
       offsetX = (canvas.width - drawWidth) / 2;
     }
 
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.fillStyle = '#0a0a0f';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
@@ -111,8 +113,8 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
   // Frame loading & Canvas sizing lifecycle
   useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    const folder = isMobile ? '/frames-mobile' : '/frames-desktop';
+    // Both mobile and desktop now use full 1080p frames for razor-sharp Retina clarity
+    const folder = '/frames-desktop';
 
     const getFrameUrl = (idx: number) => {
       const padded = String(idx).padStart(3, '0');
@@ -162,6 +164,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
     // Concurrently fetch frames without blocking UI
     let active = 0;
+    const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
     const CONCURRENCY = isMobile ? 6 : 8;
 
     const processQueue = () => {
