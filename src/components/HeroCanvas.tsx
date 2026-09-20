@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useHeroVideo } from '../hooks/useHeroVideo';
+import { useHeroFrames } from '../hooks/useHeroFrames';
 import { Phone, ArrowRight, ShieldCheck, Award, Briefcase } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -14,36 +14,14 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  const { totalFrames, getNearestFrame, setTargetFrame, waitForInitial, onRedraw } = useHeroFrames();
+
   // Phase overlay refs — direct DOM manipulation, zero React re-renders during scroll
   const phase1Ref = useRef<HTMLDivElement>(null);
   const phase2Ref = useRef<HTMLDivElement>(null);
   const phase3Ref = useRef<HTMLDivElement>(null);
 
   const scrollProgressRef = useRef(0);
-  const rafIdRef = useRef(0);
-
-  const { seekTo, waitForReady, drawToCanvas } = useHeroVideo();
-
-  // Continuous render loop — draws current video frame to canvas
-  // This is needed because video.currentTime is async; the video decodes in the background
-  // and we need to keep painting the latest decoded frame to the canvas.
-  const startRenderLoop = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    let lastTime = 0;
-
-    const render = (time: number) => {
-      // Throttle to ~40fps to save CPU (more than enough for scroll-driven content)
-      if (time - lastTime > 25) {
-        lastTime = time;
-        drawToCanvas(canvas);
-      }
-      rafIdRef.current = requestAnimationFrame(render);
-    };
-
-    rafIdRef.current = requestAnimationFrame(render);
-  }, [drawToCanvas]);
 
   // Phase overlay updates — direct DOM style manipulation, zero React re-renders
   const updateOverlays = useCallback((progress: number) => {
@@ -75,41 +53,70 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     }
   }, []);
 
-  // Initial setup: wait for video ready, draw first frame, start render loop
+  // Initial setup: wait for frames ready, set initial frame
   useEffect(() => {
-    waitForReady(() => {
+    waitForInitial(() => {
       const canvas = canvasRef.current;
       if (canvas) {
-        seekTo(0);
-        // Small delay to let the video decode the first frame
-        setTimeout(() => {
-          drawToCanvas(canvas);
-          startRenderLoop();
-        }, 100);
+        setTargetFrame(1);
       }
     });
+  }, [waitForInitial, setTargetFrame]);
 
-    // Handle resize
-    let lastWidth = window.innerWidth;
-    const handleResize = () => {
-      if (Math.abs(window.innerWidth - lastWidth) > 10 || window.innerWidth >= 768) {
-        lastWidth = window.innerWidth;
-        const canvas = canvasRef.current;
-        if (canvas) drawToCanvas(canvas);
+  // Draw frame to canvas logic
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) return;
+
+    const drawFrame = (frameIndex: number) => {
+      const img = getNearestFrame(frameIndex);
+      if (!img) return;
+
+      const canvasRatio = canvas.width / canvas.height;
+      const imgRatio = img.width / img.height;
+
+      let drawWidth = canvas.width;
+      let drawHeight = canvas.height;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (canvasRatio > imgRatio) {
+        drawHeight = canvas.width / imgRatio;
+        offsetY = (canvas.height - drawHeight) / 2;
+      } else {
+        drawWidth = canvas.height * imgRatio;
+        offsetX = (canvas.width - drawWidth) / 2;
       }
+
+      ctx.fillStyle = '#0a0a0f'; // Dark background
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     };
+
+    // Redraw whenever a new frame loads
+    onRedraw(drawFrame);
+
+    // Initial resize handling
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    
+    handleResize();
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     };
-  }, [waitForReady, seekTo, drawToCanvas, startRenderLoop]);
+  }, [getNearestFrame, onRedraw]);
 
-  // GSAP ScrollTrigger — seeks video based on scroll position
+  // GSAP ScrollTrigger — updates frame and overlays based on scroll position
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
 
     const endDistance = '+=550%';
 
@@ -135,25 +142,49 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           onLeave: () => {
             scrollProgressRef.current = 1;
             updateOverlays(1);
-            seekTo(1);
           },
-          onEnterBack: () => {
-            scrollProgressRef.current = 1;
-            updateOverlays(1);
-            seekTo(1);
+          onLeaveBack: () => {
+            scrollProgressRef.current = 0;
+            updateOverlays(0);
           },
-        },
-        onUpdate: () => {
-          const progress = proxy.progress;
-          scrollProgressRef.current = progress;
-          updateOverlays(progress);
-          seekTo(progress);
+          onUpdate: (self) => {
+            const progress = self.progress;
+            scrollProgressRef.current = progress;
+            updateOverlays(progress);
+
+            const targetFrame = Math.max(1, Math.min(totalFrames, Math.round(progress * totalFrames)));
+            setTargetFrame(targetFrame);
+
+            const ctx = canvas.getContext('2d', { alpha: false });
+            const img = getNearestFrame(targetFrame);
+            if (ctx && img) {
+              const canvasRatio = canvas.width / canvas.height;
+              const imgRatio = img.width / img.height;
+
+              let drawWidth = canvas.width;
+              let drawHeight = canvas.height;
+              let offsetX = 0;
+              let offsetY = 0;
+
+              if (canvasRatio > imgRatio) {
+                drawHeight = canvas.width / imgRatio;
+                offsetY = (canvas.height - drawHeight) / 2;
+              } else {
+                drawWidth = canvas.height * imgRatio;
+                offsetX = (canvas.width - drawWidth) / 2;
+              }
+
+              ctx.fillStyle = '#0a0a0f';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+            }
+          },
         },
       });
     }, container);
 
     return () => ctx.revert();
-  }, [updateOverlays, seekTo]);
+  }, [updateOverlays, totalFrames, setTargetFrame, getNearestFrame]);
 
   return (
     <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100vh] overflow-hidden bg-midnight-950">
