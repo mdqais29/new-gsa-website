@@ -156,7 +156,12 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        style={{ display: 'block' }}
+        style={{ 
+          display: 'block',
+          backgroundImage: 'url(/hero-poster.webp)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
       />
 
       {/* Gentle Vignette: Desktop only */}
