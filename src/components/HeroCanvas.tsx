@@ -126,7 +126,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
-          scrub: 1, // Very responsive — video decoding handles the smoothing naturally
+          scrub: true, // Link directly to scroll (Lenis already smooths it on desktop, native on mobile)
           onLeave: () => {
             scrollProgressRef.current = 1;
             updateOverlays(1);
