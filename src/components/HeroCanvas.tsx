@@ -113,6 +113,11 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
     const endDistance = '+=550%';
 
+    const isTouchDevice =
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.innerWidth < 768;
+
     const ctx = gsap.context(() => {
       const proxy = { progress: 0 };
 
@@ -126,7 +131,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
-          scrub: 1.5, // Adds a 1.5s smooth inertia glide after the user stops scrolling
+          scrub: isTouchDevice ? true : 1.5, // 1:1 instant on mobile touch, 1.5s glide on desktop
           onLeave: () => {
             scrollProgressRef.current = 1;
             updateOverlays(1);
