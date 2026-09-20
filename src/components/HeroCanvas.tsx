@@ -126,7 +126,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
-          scrub: true, // Link directly to scroll (Lenis already smooths it on desktop, native on mobile)
+          scrub: 1.5, // Adds a 1.5s smooth inertia glide after the user stops scrolling
           onLeave: () => {
             scrollProgressRef.current = 1;
             updateOverlays(1);
