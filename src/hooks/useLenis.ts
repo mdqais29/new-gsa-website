@@ -23,12 +23,12 @@ export function useLenis() {
     }
 
     const lenis = new Lenis({
-      duration: 1.0,
+      duration: 1.4,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 1.0,
+      wheelMultiplier: 1.05,
     });
 
     // Synchronize Lenis scroll event with ScrollTrigger updates

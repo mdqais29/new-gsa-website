@@ -220,7 +220,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
-          scrub: 1.2, // 1.2s buttery smooth momentum glide on both desktop and mobile
+          scrub: 1.8, // Ultra-luxurious buttery momentum glide on both desktop and mobile
           onLeave: () => {
             scrollProgressRef.current = 1;
             updateOverlays(1);
