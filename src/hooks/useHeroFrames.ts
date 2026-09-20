@@ -1,196 +1,232 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
-const TOTAL_FRAMES = 600;
+// Use every 4th frame: reduces 600 → 150 frames (~22MB vs ~90MB)
+// This is the single biggest performance win — 4x less network load
+const FRAME_STEP = 4;
+const TOTAL_SOURCE_FRAMES = 600;
+const TOTAL_FRAMES = Math.floor(TOTAL_SOURCE_FRAMES / FRAME_STEP); // 150
 
-function getFramePath(index: number): string {
-  const padded = String(index).padStart(3, '0');
+function getFramePath(logicalIndex: number): string {
+  // Map logical index (1-150) to actual file index (1, 5, 9, ... 597, 600)
+  const actualIndex = Math.min(TOTAL_SOURCE_FRAMES, ((logicalIndex - 1) * FRAME_STEP) + 1);
+  const padded = String(actualIndex).padStart(3, '0');
   return `/frames/hero/frame_${padded}.webp`;
 }
 
-interface UseHeroFramesProps {
-  onFrameLoaded?: (index: number) => void;
-}
-
-export function useHeroFrames({ onFrameLoaded }: UseHeroFramesProps = {}) {
-  const [isInitialReady, setIsInitialReady] = useState(false);
+export function useHeroFrames() {
   const imagesRef = useRef<(HTMLImageElement | null)[]>(new Array(TOTAL_FRAMES + 1).fill(null));
+  const isInitialReadyRef = useRef(false);
+  const initialReadyCallbacksRef = useRef<(() => void)[]>([]);
   const lastFoundIndexRef = useRef<number>(1);
-  const targetFrameRef = useRef<number>(1); // Allows the hook to know what frame is currently needed
+  const targetFrameRef = useRef<number>(1);
+  // Allows HeroCanvas to register a redraw function
+  const redrawCallbackRef = useRef<((frameIdx: number) => void) | null>(null);
 
   const setTargetFrame = useCallback((frame: number) => {
     targetFrameRef.current = frame;
   }, []);
 
+  const onRedraw = useCallback((cb: (frameIdx: number) => void) => {
+    redrawCallbackRef.current = cb;
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const images = imagesRef.current;
-    
-    // Track which images have been requested to avoid duplicate requests
     const requested = new Set<number>();
 
-    // Phase 1: Load frame 1 urgently
-    const firstImg = new Image();
-    firstImg.src = getFramePath(1);
-    requested.add(1);
-    
-    firstImg.onload = () => {
+    const markLoaded = (idx: number, img: HTMLImageElement) => {
       if (!isMounted) return;
-      images[1] = firstImg;
-      setIsInitialReady(true);
-      if (onFrameLoaded) onFrameLoaded(1);
-    };
+      images[idx] = img;
 
-    // We will use a dynamic loading loop instead of static batches
-    // This loop constantly checks the current targetFrame and loads frames around it
-    let activeConnections = 0;
-    const MAX_CONCURRENCY = 4; // Keep this low to prevent lagging the whole page
-    
-    let loopId: number;
+      // Signal initial ready
+      if (idx === 1 && !isInitialReadyRef.current) {
+        isInitialReadyRef.current = true;
+        initialReadyCallbacksRef.current.forEach(cb => cb());
+        initialReadyCallbacksRef.current = [];
+      }
 
-    const loadNextPriorities = () => {
-      if (!isMounted) return;
-
-      // Fill up to max concurrency
-      while (activeConnections < MAX_CONCURRENCY) {
-        let nextIndexToLoad = -1;
-        
-        // 1. First priority: The exact target frame (if not loaded)
+      // Trigger redraw if loaded frame is near current target
+      if (redrawCallbackRef.current) {
         const target = targetFrameRef.current;
-        if (!images[target] && !requested.has(target)) {
-          nextIndexToLoad = target;
-        }
-        
-        // 2. Second priority: Frames immediately ahead of target (anticipating scroll down)
-        if (nextIndexToLoad === -1) {
-          for (let i = 1; i <= 30; i++) {
-            const ahead = target + i;
-            if (ahead <= TOTAL_FRAMES && !images[ahead] && !requested.has(ahead)) {
-              nextIndexToLoad = ahead;
-              break;
-            }
-          }
-        }
-        
-        // 3. Third priority: Frames immediately behind target (anticipating scroll up)
-        if (nextIndexToLoad === -1) {
-          for (let i = 1; i <= 15; i++) {
-            const behind = target - i;
-            if (behind >= 1 && !images[behind] && !requested.has(behind)) {
-              nextIndexToLoad = behind;
-              break;
-            }
-          }
-        }
-        
-        // 4. Fourth priority: Skeleton frames to ensure we always have SOMETHING close by
-        if (nextIndexToLoad === -1) {
-          for (let i = 10; i <= TOTAL_FRAMES; i += 10) {
-            if (!images[i] && !requested.has(i)) {
-              nextIndexToLoad = i;
-              break;
-            }
-          }
-        }
-        
-        // 5. Lowest priority: Fill remaining gaps sequentially starting from target
-        if (nextIndexToLoad === -1) {
-           for (let i = 1; i <= TOTAL_FRAMES; i++) {
-             // Look ahead first, then loop around
-             const checkIdx = ((target + i - 1) % TOTAL_FRAMES) + 1;
-             if (!images[checkIdx] && !requested.has(checkIdx)) {
-               nextIndexToLoad = checkIdx;
-               break;
-             }
-           }
-        }
-
-        if (nextIndexToLoad !== -1) {
-          requested.add(nextIndexToLoad);
-          activeConnections++;
-          
-          const img = new Image();
-          img.src = getFramePath(nextIndexToLoad);
-          
-          const handleComplete = () => {
-            if (isMounted) {
-              images[nextIndexToLoad] = img;
-              activeConnections--;
-              if (onFrameLoaded) onFrameLoaded(nextIndexToLoad);
-            }
-          };
-
-          img.onload = handleComplete;
-          img.onerror = () => {
-            if (isMounted) activeConnections--; // Still free up connection on error
-          };
-        } else {
-          // Everything is loaded or requested
-          break; 
+        if (Math.abs(target - idx) <= 10) {
+          redrawCallbackRef.current(idx);
         }
       }
-      
-      // Schedule next check
-      // Use setTimeout to yield thread to browser for smooth scrolling
-      loopId = setTimeout(loadNextPriorities, 50) as unknown as number;
     };
 
-    // Start background loading loop after a short delay to let the page render first
-    setTimeout(loadNextPriorities, 500);
+    // Phase 1: Load frame 1 urgently (and last frame)
+    const loadUrgent = (idx: number) => {
+      if (requested.has(idx)) return;
+      requested.add(idx);
+      const img = new Image();
+      img.src = getFramePath(idx);
+      img.onload = () => markLoaded(idx, img);
+      img.onerror = () => {}; // silently fail
+    };
+
+    loadUrgent(1);
+    loadUrgent(TOTAL_FRAMES); // Last frame needed for final lockup
+
+    // Phase 2: Smart background loader using requestIdleCallback or setTimeout fallback
+    let activeConnections = 0;
+    const MAX_CONCURRENCY = 3;
+    let stopped = false;
+
+    const scheduleNext = (fn: () => void) => {
+      if (stopped) return;
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(fn, { timeout: 200 });
+      } else {
+        setTimeout(fn, 80);
+      }
+    };
+
+    const loadFrame = (idx: number) => {
+      if (stopped || requested.has(idx) || idx < 1 || idx > TOTAL_FRAMES) return false;
+      requested.add(idx);
+      activeConnections++;
+
+      const img = new Image();
+      img.src = getFramePath(idx);
+      img.onload = () => {
+        markLoaded(idx, img);
+        activeConnections--;
+        scheduleNext(pumpLoader);
+      };
+      img.onerror = () => {
+        activeConnections--;
+        scheduleNext(pumpLoader);
+      };
+      return true;
+    };
+
+    const pumpLoader = () => {
+      if (stopped || activeConnections >= MAX_CONCURRENCY) return;
+
+      const target = targetFrameRef.current;
+
+      // Try to fill up to MAX_CONCURRENCY
+      while (activeConnections < MAX_CONCURRENCY) {
+        let loaded = false;
+
+        // Priority 1: Exact target frame
+        if (!images[target] && !requested.has(target)) {
+          loaded = loadFrame(target);
+          if (loaded) continue;
+        }
+
+        // Priority 2: Frames ahead (scroll direction)
+        let found = false;
+        for (let i = 1; i <= 20; i++) {
+          const ahead = target + i;
+          if (ahead <= TOTAL_FRAMES && !images[ahead] && !requested.has(ahead)) {
+            loadFrame(ahead);
+            found = true;
+            break;
+          }
+        }
+        if (found) continue;
+
+        // Priority 3: Frames behind
+        for (let i = 1; i <= 10; i++) {
+          const behind = target - i;
+          if (behind >= 1 && !images[behind] && !requested.has(behind)) {
+            loadFrame(behind);
+            found = true;
+            break;
+          }
+        }
+        if (found) continue;
+
+        // Priority 4: Every 10th frame skeleton
+        for (let i = 10; i <= TOTAL_FRAMES; i += 10) {
+          if (!images[i] && !requested.has(i)) {
+            loadFrame(i);
+            found = true;
+            break;
+          }
+        }
+        if (found) continue;
+
+        // Priority 5: Fill remaining gaps
+        for (let i = 1; i <= TOTAL_FRAMES; i++) {
+          const checkIdx = ((target + i - 1) % TOTAL_FRAMES) + 1;
+          if (!images[checkIdx] && !requested.has(checkIdx)) {
+            loadFrame(checkIdx);
+            found = true;
+            break;
+          }
+        }
+        if (!found) break; // Everything loaded or requested
+      }
+    };
+
+    // Delay the background loader to let page resources (CSS, JS, fonts) load first
+    const startTimer = setTimeout(() => {
+      if (!stopped) pumpLoader();
+    }, 800);
 
     return () => {
       isMounted = false;
-      clearTimeout(loopId);
+      stopped = true;
+      clearTimeout(startTimer);
     };
-  }, [onFrameLoaded]);
+  }, []);
 
-  // Helper to get nearest loaded frame to avoid any blank flicker
+  // Get nearest loaded frame — zero-allocation fast path
   const getNearestFrame = useCallback((targetIndex: number): HTMLImageElement | null => {
     const clamped = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(targetIndex)));
     const images = imagesRef.current;
 
-    // Direct hit with verified readiness
+    // Direct hit
     const exact = images[clamped];
     if (exact && exact.complete && exact.naturalWidth > 0) {
       lastFoundIndexRef.current = clamped;
       return exact;
     }
 
-    // Search outwards for closest available loaded frame (expanded search radius)
-    for (let offset = 1; offset <= 120; offset++) {
-      // Prefer looking backwards so the animation doesn't jump ahead of scroll
+    // Search outward (prefer behind so we don't skip ahead of scroll)
+    for (let offset = 1; offset <= 50; offset++) {
       const before = clamped - offset;
       if (before >= 1) {
-        const imgBefore = images[before];
-        if (imgBefore && imgBefore.complete && imgBefore.naturalWidth > 0) {
+        const img = images[before];
+        if (img && img.complete && img.naturalWidth > 0) {
           lastFoundIndexRef.current = before;
-          return imgBefore;
+          return img;
         }
       }
-      
       const after = clamped + offset;
       if (after <= TOTAL_FRAMES) {
-        const imgAfter = images[after];
-        if (imgAfter && imgAfter.complete && imgAfter.naturalWidth > 0) {
+        const img = images[after];
+        if (img && img.complete && img.naturalWidth > 0) {
           lastFoundIndexRef.current = after;
-          return imgAfter;
+          return img;
         }
       }
     }
 
-    // Check last successfully found frame
+    // Last resort
     const lastFound = images[lastFoundIndexRef.current];
-    if (lastFound && lastFound.complete && lastFound.naturalWidth > 0) {
-      return lastFound;
-    }
-
-    // Fallback to frame 1
+    if (lastFound && lastFound.complete && lastFound.naturalWidth > 0) return lastFound;
     return images[1] || null;
+  }, []);
+
+  // Synchronous check + async notification pattern for isInitialReady
+  const waitForInitial = useCallback((cb: () => void) => {
+    if (isInitialReadyRef.current) {
+      cb();
+    } else {
+      initialReadyCallbacksRef.current.push(cb);
+    }
   }, []);
 
   return {
     totalFrames: TOTAL_FRAMES,
-    isInitialReady,
+    isInitialReadyRef,
+    waitForInitial,
     getNearestFrame,
-    setTargetFrame
+    setTargetFrame,
+    onRedraw,
   };
 }

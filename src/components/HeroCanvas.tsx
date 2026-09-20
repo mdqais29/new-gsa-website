@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useHeroFrames } from '../hooks/useHeroFrames';
@@ -13,20 +13,18 @@ interface HeroCanvasProps {
 export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  // Progress tracker for Phase 1, Phase 2, Phase 3
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const scrollProgressRef = useRef(0);
+
+  // Phase overlay refs — we mutate style directly, NO React state involved
+  const phase1Ref = useRef<HTMLDivElement>(null);
+  const phase2Ref = useRef<HTMLDivElement>(null);
+  const phase3Ref = useRef<HTMLDivElement>(null);
+
   const lastDrawnFrameRef = useRef(1);
-  const redrawRef = useRef<(idx: number) => void>();
+  const scrollProgressRef = useRef(0);
 
-  const { totalFrames, getNearestFrame, isInitialReady, setTargetFrame } = useHeroFrames({
-    onFrameLoaded: (idx) => {
-      if (redrawRef.current) redrawRef.current(idx);
-    }
-  });
+  const { totalFrames, waitForInitial, getNearestFrame, setTargetFrame, onRedraw } = useHeroFrames();
 
-  // Canvas drawing function with proper aspect-ratio cover math and DPR
+  // Canvas drawing function — pure imperative, no React state dependency
   const drawFrame = useCallback((frameNum: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -36,15 +34,12 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     const img = getNearestFrame(frameNum);
     if (!img || !img.complete || img.naturalWidth === 0) return;
 
-    const isDesktop = window.innerWidth >= 768;
-    const dpr = isDesktop ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+    // Use DPR 1 always — the visual difference is negligible but the perf win is huge
     const rect = canvas.getBoundingClientRect();
-    
-    // Set actual canvas resolution with fallback if rect is 0
     const w = rect.width || window.innerWidth;
     const h = rect.height || window.innerHeight;
-    const targetW = Math.round(w * dpr);
-    const targetH = Math.round(h * dpr);
+    const targetW = Math.round(w);
+    const targetH = Math.round(h);
 
     if (canvas.width !== targetW || canvas.height !== targetH) {
       canvas.width = targetW;
@@ -55,10 +50,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     const imgRatio = img.naturalWidth / img.naturalHeight;
     const canvasRatio = canvas.width / canvas.height;
 
-    let drawW: number;
-    let drawH: number;
-    let drawX: number;
-    let drawY: number;
+    let drawW: number, drawH: number, drawX: number, drawY: number;
 
     if (canvasRatio > imgRatio) {
       drawW = canvas.width;
@@ -72,27 +64,56 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
       drawY = 0;
     }
 
-    // Paint directly over previous frame to prevent single-frame white/black flash
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
   }, [getNearestFrame]);
 
+  // Phase overlay updates — direct DOM manipulation, zero React re-renders
+  const updateOverlays = useCallback((progress: number) => {
+    // Phase 1: 0% - 28%
+    const p1 = progress <= 0.25 ? 1 : Math.max(0, 1 - (progress - 0.25) / 0.03);
+    if (phase1Ref.current) {
+      phase1Ref.current.style.opacity = String(p1);
+      phase1Ref.current.style.visibility = p1 > 0.05 ? 'visible' : 'hidden';
+    }
+
+    // Phase 2: 29% - 62%
+    let p2 = 0;
+    if (progress >= 0.28 && progress <= 0.62) {
+      if (progress < 0.31) p2 = (progress - 0.28) / 0.03;
+      else if (progress > 0.58) p2 = Math.max(0, 1 - (progress - 0.58) / 0.03);
+      else p2 = 1;
+    }
+    if (phase2Ref.current) {
+      phase2Ref.current.style.opacity = String(p2);
+      phase2Ref.current.style.visibility = p2 > 0.05 ? 'visible' : 'hidden';
+    }
+
+    // Phase 3: 63% - 100%
+    const p3 = progress >= 0.62 ? Math.min(1, (progress - 0.62) / 0.03) : 0;
+    if (phase3Ref.current) {
+      phase3Ref.current.style.opacity = String(p3);
+      phase3Ref.current.style.visibility = p3 > 0.05 ? 'visible' : 'hidden';
+      phase3Ref.current.style.pointerEvents = progress >= 0.62 ? 'auto' : 'none';
+    }
+  }, []);
+
+  // Register redraw callback for when frames load near current scroll position
   useEffect(() => {
-    redrawRef.current = (idx: number) => {
-      const currentTarget = Math.max(1, Math.min(totalFrames, Math.round(1 + scrollProgressRef.current * (totalFrames - 1))));
-      // If the newly loaded frame is close to what we actually want to show, trigger a redraw
-      if (Math.abs(currentTarget - idx) <= 15) {
+    onRedraw((loadedIdx: number) => {
+      const progress = scrollProgressRef.current;
+      const currentTarget = Math.max(1, Math.min(totalFrames, Math.round(1 + progress * (totalFrames - 1))));
+      if (Math.abs(currentTarget - loadedIdx) <= 8) {
         lastDrawnFrameRef.current = currentTarget;
         drawFrame(currentTarget);
       }
-    };
-  }, [drawFrame, totalFrames]);
+    });
+  }, [drawFrame, totalFrames, onRedraw]);
 
-  // Initial draw and window resize handling (guarded against mobile address bar height jitter)
+  // Initial draw and window resize
   useEffect(() => {
     let lastWidth = window.innerWidth;
 
     const handleResize = () => {
-      // Only recalculate on desktop or if width actually changed (rotations/resizing)
       if (Math.abs(window.innerWidth - lastWidth) > 10 || window.innerWidth >= 768) {
         lastWidth = window.innerWidth;
         drawFrame(lastDrawnFrameRef.current);
@@ -100,12 +121,14 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     };
 
     window.addEventListener('resize', handleResize);
-    if (isInitialReady) {
-      drawFrame(lastDrawnFrameRef.current);
-    }
+
+    // Wait for initial frame to be ready, then draw
+    waitForInitial(() => {
+      drawFrame(1);
+    });
 
     return () => window.removeEventListener('resize', handleResize);
-  }, [drawFrame, isInitialReady]);
+  }, [drawFrame, waitForInitial]);
 
   // GSAP ScrollTrigger Scrubbing Engine
   useEffect(() => {
@@ -113,7 +136,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
-    const endDistance = '+=550%'; // Uniform 550% scroll distance for buttery smooth progression on all devices
+    const endDistance = '+=550%';
 
     const ctx = gsap.context(() => {
       const proxy = { progress: 0 };
@@ -127,48 +150,40 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           end: endDistance,
           pin: true,
           pinSpacing: true,
-          anticipatePin: 1, // Prevent pinning jump on all devices
-          scrub: 2.5, // Genuine 2.5 seconds of buttery smooth inertia applied to the tween
+          anticipatePin: 1,
+          scrub: 1.2, // Reduced from 2.5 — much more responsive to scroll input
           onLeave: () => {
-            setScrollProgress(1);
+            scrollProgressRef.current = 1;
+            updateOverlays(1);
+            setTargetFrame(totalFrames);
             lastDrawnFrameRef.current = totalFrames;
             drawFrame(totalFrames);
           },
           onEnterBack: () => {
-            setScrollProgress(1);
+            scrollProgressRef.current = 1;
+            updateOverlays(1);
+            setTargetFrame(totalFrames);
             lastDrawnFrameRef.current = totalFrames;
             drawFrame(totalFrames);
           },
         },
         onUpdate: () => {
           const progress = proxy.progress;
-          setScrollProgress(progress);
           scrollProgressRef.current = progress;
 
-          // Firmly lock to final frame when approaching or reaching the end of the scroll
+          // Update overlays via direct DOM manipulation — no React re-render
+          updateOverlays(progress);
+
+          // Determine target frame
+          let targetFrame: number;
           if (progress > 0.999) {
-            setTargetFrame(totalFrames);
-            if (lastDrawnFrameRef.current !== totalFrames) {
-              lastDrawnFrameRef.current = totalFrames;
-              drawFrame(totalFrames);
-            }
-            return;
+            targetFrame = totalFrames;
+          } else if (progress < 0.001) {
+            targetFrame = 1;
+          } else {
+            const exactFrame = 1 + progress * (totalFrames - 1);
+            targetFrame = Math.max(1, Math.min(totalFrames, Math.round(exactFrame)));
           }
-
-          // Force frame 1 at the very beginning to prevent any visual gap
-          if (progress < 0.001) {
-            setTargetFrame(1);
-            if (lastDrawnFrameRef.current !== 1) {
-              lastDrawnFrameRef.current = 1;
-              drawFrame(1);
-            }
-            return;
-          }
-
-          // Calculate target frame
-          const exactFrame = 1 + progress * (totalFrames - 1);
-          // Use Math.round for smoother frame transitions instead of floor
-          const targetFrame = Math.max(1, Math.min(totalFrames, Math.round(exactFrame)));
 
           setTargetFrame(targetFrame);
 
@@ -181,31 +196,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     }, container);
 
     return () => ctx.revert();
-  }, [totalFrames, drawFrame]);
-
-  // Phase Opacity Calculations - Fast, Clean, Snappy Transitions (No lingering blurry states)
-  // Phase 1: 0% - 28% (Rock solid 1.0, quick 0.03 exit)
-  const phase1Opacity = scrollProgress <= 0.25 
-    ? 1 
-    : Math.max(0, 1 - (scrollProgress - 0.25) / 0.03);
-
-  // Phase 2: 29% - 62% (Quick 0.03 entrance, Rock solid 1.0, quick 0.03 exit)
-  let phase2Opacity = 0;
-  if (scrollProgress >= 0.28 && scrollProgress <= 0.62) {
-    if (scrollProgress < 0.31) {
-      phase2Opacity = (scrollProgress - 0.28) / 0.03;
-    } else if (scrollProgress > 0.58) {
-      phase2Opacity = Math.max(0, 1 - (scrollProgress - 0.58) / 0.03);
-    } else {
-      phase2Opacity = 1;
-    }
-  }
-
-  // Phase 3: 63% - 100% (Quick 0.03 entrance, 100% solid lockup with zero blur)
-  const phase3Opacity = scrollProgress >= 0.62
-    ? Math.min(1, (scrollProgress - 0.62) / 0.03)
-    : 0;
-  const isPhase3Active = scrollProgress >= 0.62;
+  }, [totalFrames, drawFrame, updateOverlays, setTargetFrame]);
 
   return (
     <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100vh] overflow-hidden bg-midnight-950">
@@ -221,8 +212,9 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
       {/* PHASE 1 OVERLAY (0% - 28%): Starting Career */}
       <div
-        className="absolute inset-0 z-30 flex items-end pb-14 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
-        style={{ opacity: phase1Opacity, visibility: phase1Opacity > 0.05 ? 'visible' : 'hidden' }}
+        ref={phase1Ref}
+        className="absolute inset-0 z-30 flex items-end pb-14 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none"
+        style={{ opacity: 1, visibility: 'visible', transition: 'none' }}
       >
         {/* Phase 1 Studio Scrim - Strictly restrained to bottom 45% on mobile */}
         <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/70 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
@@ -253,8 +245,9 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
       {/* PHASE 2 OVERLAY (29% - 62%): Practical Safety Training */}
       <div
-        className="absolute inset-0 z-30 flex items-end pb-14 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none transition-opacity duration-150"
-        style={{ opacity: phase2Opacity, visibility: phase2Opacity > 0.05 ? 'visible' : 'hidden' }}
+        ref={phase2Ref}
+        className="absolute inset-0 z-30 flex items-end pb-14 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none"
+        style={{ opacity: 0, visibility: 'hidden', transition: 'none' }}
       >
         {/* Phase 2 Studio Scrim - Strictly restrained to bottom 45% on mobile */}
         <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/70 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
@@ -285,13 +278,9 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
       {/* PHASE 3 OVERLAY (63% - 100%): Fixed Hero Lockup (Solid, Crisp & Instant) */}
       <div
-        className={`absolute inset-0 z-30 flex items-end pb-12 sm:pb-0 sm:items-center justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 transition-opacity duration-150 ${
-          isPhase3Active ? 'pointer-events-auto' : 'pointer-events-none'
-        }`}
-        style={{
-          opacity: phase3Opacity,
-          visibility: phase3Opacity > 0.05 ? 'visible' : 'hidden',
-        }}
+        ref={phase3Ref}
+        className="absolute inset-0 z-30 flex items-end pb-12 sm:pb-0 sm:items-center justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24"
+        style={{ opacity: 0, visibility: 'hidden', pointerEvents: 'none', transition: 'none' }}
       >
         {/* Phase 3 Studio Scrim - Restrained to bottom 55% on mobile for complete top visual freedom */}
         <div className="absolute bottom-0 left-0 right-0 h-[55%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/80 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
