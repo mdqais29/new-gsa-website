@@ -9,9 +9,11 @@ interface HeroCanvasProps {
   onOpenEnroll: (course?: string) => void;
 }
 
+const TOTAL_FRAMES = 300;
+
 export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Phase overlay refs — direct DOM manipulation, zero React re-renders during scroll
   const phase1Ref = useRef<HTMLDivElement>(null);
@@ -19,6 +21,8 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
   const phase3Ref = useRef<HTMLDivElement>(null);
 
   const scrollProgressRef = useRef(0);
+  const currentFrameRef = useRef(1);
+  const imagesMapRef = useRef<Map<number, HTMLImageElement>>(new Map());
 
   // Phase overlay updates — direct DOM style manipulation, zero React re-renders
   const updateOverlays = useCallback((progress: number) => {
@@ -50,93 +54,207 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     }
   }, []);
 
-  const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
-  const videoSrc = isMobile ? '/hero-mobile.mp4' : '/hero.mp4';
+  // Helper to draw an image to canvas with cover scaling
+  const renderImageToCanvas = useCallback((img: HTMLImageElement) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) return;
 
-  useEffect(() => {
-    const container = containerRef.current;
-    const video = videoRef.current;
-    if (!container || !video) return;
+    const canvasRatio = canvas.width / canvas.height;
+    const imgRatio = img.width / img.height;
 
-    video.muted = true;
-    video.playsInline = true;
-    video.pause();
+    let drawWidth = canvas.width;
+    let drawHeight = canvas.height;
+    let offsetX = 0;
+    let offsetY = 0;
 
-    let ctx: gsap.Context | null = null;
-    let isInitialized = false;
-
-    const initScrollTrigger = () => {
-      if (isInitialized) return;
-      isInitialized = true;
-
-      const duration = video.duration && !isNaN(video.duration) && video.duration > 0 ? video.duration : 20;
-      const maxTime = Math.max(0, duration - 0.05);
-
-      ctx = gsap.context(() => {
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: container,
-            start: 'top top',
-            end: '+=550%',
-            pin: true,
-            pinSpacing: true,
-            anticipatePin: 1,
-            scrub: 1.2, // 1.2s buttery smooth momentum glide
-            onLeave: () => {
-              scrollProgressRef.current = 1;
-              updateOverlays(1);
-            },
-            onLeaveBack: () => {
-              scrollProgressRef.current = 0;
-              updateOverlays(0);
-            },
-            onUpdate: (self) => {
-              scrollProgressRef.current = self.progress;
-              updateOverlays(self.progress);
-            },
-          },
-        });
-
-        tl.fromTo(
-          video,
-          { currentTime: 0 },
-          { currentTime: maxTime, ease: 'none' }
-        );
-      }, container);
-    };
-
-    if (video.readyState >= 1) {
-      initScrollTrigger();
+    if (canvasRatio > imgRatio) {
+      drawHeight = canvas.width / imgRatio;
+      offsetY = (canvas.height - drawHeight) / 2;
     } else {
-      video.addEventListener('loadedmetadata', initScrollTrigger, { once: true });
-      video.addEventListener('canplay', initScrollTrigger, { once: true });
-      video.load();
+      drawWidth = canvas.height * imgRatio;
+      offsetX = (canvas.width - drawWidth) / 2;
     }
 
-    // Safety fallback in case metadata event already fired
-    const fallbackTimer = setTimeout(() => {
-      initScrollTrigger();
-    }, 600);
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+  }, []);
+
+  // Find nearest loaded frame and draw it
+  const renderFrame = useCallback((targetIndex: number) => {
+    currentFrameRef.current = targetIndex;
+    const map = imagesMapRef.current;
+
+    if (map.has(targetIndex)) {
+      renderImageToCanvas(map.get(targetIndex)!);
+      return;
+    }
+
+    // Search outwards for nearest loaded frame
+    for (let offset = 1; offset < 35; offset++) {
+      if (map.has(targetIndex - offset)) {
+        renderImageToCanvas(map.get(targetIndex - offset)!);
+        return;
+      }
+      if (map.has(targetIndex + offset)) {
+        renderImageToCanvas(map.get(targetIndex + offset)!);
+        return;
+      }
+    }
+
+    if (map.has(1)) {
+      renderImageToCanvas(map.get(1)!);
+    }
+  }, [renderImageToCanvas]);
+
+  // Frame loading & Canvas sizing lifecycle
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    const folder = isMobile ? '/frames-mobile' : '/frames-desktop';
+
+    const getFrameUrl = (idx: number) => {
+      const padded = String(idx).padStart(3, '0');
+      return `${folder}/frame_${padded}.webp`;
+    };
+
+    const map = imagesMapRef.current;
+
+    const loadFrame = (idx: number): Promise<HTMLImageElement> => {
+      return new Promise((resolve, reject) => {
+        if (map.has(idx)) {
+          resolve(map.get(idx)!);
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          map.set(idx, img);
+          // If the user is currently at this exact frame, redraw immediately
+          if (currentFrameRef.current === idx) {
+            renderImageToCanvas(img);
+          }
+          resolve(img);
+        };
+        img.onerror = () => reject();
+        img.src = getFrameUrl(idx);
+      });
+    };
+
+    // 1. Immediately load & display Frame 1
+    loadFrame(1).then((img) => {
+      renderImageToCanvas(img);
+    }).catch(() => {});
+
+    // 2. Load skeleton (every 10th frame: 10, 20, 30... 300) so scrubbing is immediately responsive
+    const skeletonIndices: number[] = [];
+    for (let i = 10; i <= TOTAL_FRAMES; i += 10) {
+      skeletonIndices.push(i);
+    }
+
+    // 3. Queue all intermediate frames
+    const remainingIndices: number[] = [];
+    for (let i = 2; i <= TOTAL_FRAMES; i++) {
+      if (i % 10 !== 0) remainingIndices.push(i);
+    }
+
+    const fullQueue = [...skeletonIndices, ...remainingIndices];
+
+    // Concurrently fetch frames without blocking UI
+    let active = 0;
+    const CONCURRENCY = isMobile ? 6 : 8;
+
+    const processQueue = () => {
+      while (active < CONCURRENCY && fullQueue.length > 0) {
+        const nextIdx = fullQueue.shift()!;
+        active++;
+        loadFrame(nextIdx)
+          .catch(() => {})
+          .finally(() => {
+            active--;
+            processQueue();
+          });
+      }
+    };
+
+    processQueue();
+
+    // Canvas resize handling
+    const handleResize = () => {
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        renderFrame(currentFrameRef.current);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
 
     return () => {
-      clearTimeout(fallbackTimer);
-      if (ctx) ctx.revert();
+      window.removeEventListener('resize', handleResize);
     };
-  }, [updateOverlays]);
+  }, [renderImageToCanvas, renderFrame]);
+
+  // GSAP ScrollTrigger
+  useEffect(() => {
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
+
+    const ctx = gsap.context(() => {
+      const proxy = { progress: 0 };
+
+      gsap.to(proxy, {
+        progress: 1,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: container,
+          start: 'top top',
+          end: '+=550%',
+          pin: true,
+          pinSpacing: true,
+          anticipatePin: 1,
+          scrub: 1.2, // 1.2s buttery smooth momentum glide on both desktop and mobile
+          onLeave: () => {
+            scrollProgressRef.current = 1;
+            updateOverlays(1);
+            renderFrame(TOTAL_FRAMES);
+          },
+          onLeaveBack: () => {
+            scrollProgressRef.current = 0;
+            updateOverlays(0);
+            renderFrame(1);
+          },
+          onUpdate: (self) => {
+            const progress = self.progress;
+            scrollProgressRef.current = progress;
+            updateOverlays(progress);
+
+            const targetFrame = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(progress * (TOTAL_FRAMES - 1)) + 1));
+            renderFrame(targetFrame);
+          },
+        },
+      });
+    }, container);
+
+    return () => ctx.revert();
+  }, [updateOverlays, renderFrame]);
 
   return (
-    <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100vh] overflow-hidden bg-midnight-950">
-      {/* Background Video — Direct GPU Hardware Accelerated */}
-      <video
-        ref={videoRef}
-        key={videoSrc}
+    <section id="hero" ref={containerRef} className="relative z-20 w-full h-[100vh] h-[100dvh] overflow-hidden bg-midnight-950">
+      {/* HTML5 Canvas Background */}
+      <canvas
+        ref={canvasRef}
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        playsInline
-        muted
-        preload="auto"
-        poster="/hero-poster.webp"
-        src={videoSrc}
-        style={{ display: 'block' }}
+        style={{ 
+          display: 'block',
+          backgroundImage: 'url(/hero-poster.webp)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
       />
 
       {/* Gentle Vignette: Desktop only */}
@@ -145,7 +263,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
       {/* PHASE 1 OVERLAY (0% - 28%): Starting Career */}
       <div
         ref={phase1Ref}
-        className="absolute inset-0 z-30 flex items-end pb-14 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none"
+        className="absolute inset-0 z-30 flex items-end pb-12 sm:pb-16 md:pb-20 lg:pb-24 justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none"
         style={{ opacity: 1, visibility: 'visible', transition: 'none' }}
       >
         <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/70 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
@@ -174,7 +292,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
       {/* PHASE 2 OVERLAY (29% - 62%): Practical Safety Training */}
       <div
         ref={phase2Ref}
-        className="absolute inset-0 z-30 flex items-end pb-14 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none"
+        className="absolute inset-0 z-30 flex items-end pb-12 sm:pb-16 md:pb-20 lg:pb-24 justify-start sm:justify-end px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24 pointer-events-none"
         style={{ opacity: 0, visibility: 'hidden', transition: 'none' }}
       >
         <div className="absolute bottom-0 left-0 right-0 h-[45%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/70 to-transparent sm:bg-gradient-to-l sm:from-midnight-950/90 sm:via-midnight-950/40 sm:to-transparent" />
@@ -203,13 +321,13 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
       {/* PHASE 3 OVERLAY (63% - 100%): Fixed Hero Lockup */}
       <div
         ref={phase3Ref}
-        className="absolute inset-0 z-30 flex items-end pb-12 sm:pb-0 sm:items-center justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24"
+        className="absolute inset-0 z-30 flex items-end pb-8 sm:pb-0 sm:items-center justify-start px-5 sm:px-12 md:px-16 lg:px-20 xl:px-24"
         style={{ opacity: 0, visibility: 'hidden', pointerEvents: 'none', transition: 'none' }}
       >
         <div className="absolute bottom-0 left-0 right-0 h-[55%] sm:h-full sm:inset-0 pointer-events-none bg-gradient-to-t from-black via-black/80 to-transparent sm:bg-gradient-to-r sm:from-midnight-950/95 sm:via-midnight-950/75 sm:to-transparent" />
 
         <div className="relative z-10 w-full max-w-xl lg:max-w-2xl text-left drop-shadow-[0_8px_30px_rgba(0,0,0,1)]">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange sm:bg-safety-orange/10 border border-safety-orange sm:border-safety-orange/30 text-white sm:text-safety-orange shadow-[0_4px_12px_rgba(255,62,0,0.4)] sm:shadow-md mb-2.5 sm:mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-safety-orange sm:bg-safety-orange/10 border border-safety-orange sm:border-safety-orange/30 text-white sm:text-safety-orange shadow-[0_4px_12px_rgba(255,62,0,0.4)] sm:shadow-md mb-2 sm:mb-4">
             <span className="w-1.5 h-1.5 rounded-full bg-white sm:bg-safety-orange animate-pulse" />
             <span className="text-[11px] sm:text-xs md:text-sm font-bold tracking-wider uppercase font-mono">
               Admissions Open • 2026 Batch
@@ -224,11 +342,11 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
             & Earn High Salaries
           </h1>
 
-          <p className="text-xs sm:text-sm md:text-base lg:text-lg text-slate-200 max-w-xl mb-4 sm:mb-7 font-normal leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base lg:text-lg text-slate-200 max-w-xl mb-3 sm:mb-7 font-normal leading-relaxed">
             Get certified in recognized programs including Diploma in Fire & Safety, IOSH, OSHA, and NEBOSH. Unlock high-paying safety careers in India and abroad with dedicated job guidance.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-2.5 sm:gap-3 mb-4 sm:mb-7">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-2.5 sm:gap-3 mb-3 sm:mb-7">
             <button
               onClick={() => onOpenEnroll()}
               className="w-full sm:w-auto px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-[#FF3E00] hover:bg-[#E03500] text-white font-extrabold text-xs sm:text-sm md:text-base shadow-lg shadow-[#FF3E00]/30 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 group"
