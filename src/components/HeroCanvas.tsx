@@ -14,11 +14,17 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  const { totalFrames, getNearestFrame, isInitialReady } = useHeroFrames();
-  
   // Progress tracker for Phase 1, Phase 2, Phase 3
   const [scrollProgress, setScrollProgress] = useState(0);
+  const scrollProgressRef = useRef(0);
   const lastDrawnFrameRef = useRef(1);
+  const redrawRef = useRef<(idx: number) => void>();
+
+  const { totalFrames, getNearestFrame, isInitialReady, setTargetFrame } = useHeroFrames({
+    onFrameLoaded: (idx) => {
+      if (redrawRef.current) redrawRef.current(idx);
+    }
+  });
 
   // Canvas drawing function with proper aspect-ratio cover math and DPR
   const drawFrame = useCallback((frameNum: number) => {
@@ -69,6 +75,17 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     // Paint directly over previous frame to prevent single-frame white/black flash
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
   }, [getNearestFrame]);
+
+  useEffect(() => {
+    redrawRef.current = (idx: number) => {
+      const currentTarget = Math.max(1, Math.min(totalFrames, Math.round(1 + scrollProgressRef.current * (totalFrames - 1))));
+      // If the newly loaded frame is close to what we actually want to show, trigger a redraw
+      if (Math.abs(currentTarget - idx) <= 15) {
+        lastDrawnFrameRef.current = currentTarget;
+        drawFrame(currentTarget);
+      }
+    };
+  }, [drawFrame, totalFrames]);
 
   // Initial draw and window resize handling (guarded against mobile address bar height jitter)
   useEffect(() => {
@@ -126,9 +143,11 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         onUpdate: () => {
           const progress = proxy.progress;
           setScrollProgress(progress);
+          scrollProgressRef.current = progress;
 
           // Firmly lock to final frame when approaching or reaching the end of the scroll
           if (progress > 0.999) {
+            setTargetFrame(totalFrames);
             if (lastDrawnFrameRef.current !== totalFrames) {
               lastDrawnFrameRef.current = totalFrames;
               drawFrame(totalFrames);
@@ -138,6 +157,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
           // Force frame 1 at the very beginning to prevent any visual gap
           if (progress < 0.001) {
+            setTargetFrame(1);
             if (lastDrawnFrameRef.current !== 1) {
               lastDrawnFrameRef.current = 1;
               drawFrame(1);
@@ -149,6 +169,8 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           const exactFrame = 1 + progress * (totalFrames - 1);
           // Use Math.round for smoother frame transitions instead of floor
           const targetFrame = Math.max(1, Math.min(totalFrames, Math.round(exactFrame)));
+
+          setTargetFrame(targetFrame);
 
           if (targetFrame !== lastDrawnFrameRef.current) {
             lastDrawnFrameRef.current = targetFrame;

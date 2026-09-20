@@ -7,95 +7,141 @@ function getFramePath(index: number): string {
   return `/frames/hero/frame_${padded}.webp`;
 }
 
-export function useHeroFrames() {
+interface UseHeroFramesProps {
+  onFrameLoaded?: (index: number) => void;
+}
+
+export function useHeroFrames({ onFrameLoaded }: UseHeroFramesProps = {}) {
   const [isInitialReady, setIsInitialReady] = useState(false);
   const imagesRef = useRef<(HTMLImageElement | null)[]>(new Array(TOTAL_FRAMES + 1).fill(null));
   const lastFoundIndexRef = useRef<number>(1);
+  const targetFrameRef = useRef<number>(1); // Allows the hook to know what frame is currently needed
+
+  const setTargetFrame = useCallback((frame: number) => {
+    targetFrameRef.current = frame;
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
     const images = imagesRef.current;
+    
+    // Track which images have been requested to avoid duplicate requests
+    const requested = new Set<number>();
 
     // Phase 1: Load frame 1 urgently
     const firstImg = new Image();
     firstImg.src = getFramePath(1);
+    requested.add(1);
+    
     firstImg.onload = () => {
       if (!isMounted) return;
       images[1] = firstImg;
       setIsInitialReady(true);
+      if (onFrameLoaded) onFrameLoaded(1);
     };
 
-    // Phase 2: Load key sequence in priority batches
-    const priorityIndices: number[] = [];
-    const secondaryIndices: number[] = [];
+    // We will use a dynamic loading loop instead of static batches
+    // This loop constantly checks the current targetFrame and loads frames around it
+    let activeConnections = 0;
+    const MAX_CONCURRENCY = 4; // Keep this low to prevent lagging the whole page
+    
+    let loopId: number;
 
-    for (let i = 2; i <= TOTAL_FRAMES; i++) {
-      if (i <= 30 || i % 10 === 0) {
-        priorityIndices.push(i);
-      } else {
-        secondaryIndices.push(i);
+    const loadNextPriorities = () => {
+      if (!isMounted) return;
+
+      // Fill up to max concurrency
+      while (activeConnections < MAX_CONCURRENCY) {
+        let nextIndexToLoad = -1;
+        
+        // 1. First priority: The exact target frame (if not loaded)
+        const target = targetFrameRef.current;
+        if (!images[target] && !requested.has(target)) {
+          nextIndexToLoad = target;
+        }
+        
+        // 2. Second priority: Frames immediately ahead of target (anticipating scroll down)
+        if (nextIndexToLoad === -1) {
+          for (let i = 1; i <= 30; i++) {
+            const ahead = target + i;
+            if (ahead <= TOTAL_FRAMES && !images[ahead] && !requested.has(ahead)) {
+              nextIndexToLoad = ahead;
+              break;
+            }
+          }
+        }
+        
+        // 3. Third priority: Frames immediately behind target (anticipating scroll up)
+        if (nextIndexToLoad === -1) {
+          for (let i = 1; i <= 15; i++) {
+            const behind = target - i;
+            if (behind >= 1 && !images[behind] && !requested.has(behind)) {
+              nextIndexToLoad = behind;
+              break;
+            }
+          }
+        }
+        
+        // 4. Fourth priority: Skeleton frames to ensure we always have SOMETHING close by
+        if (nextIndexToLoad === -1) {
+          for (let i = 10; i <= TOTAL_FRAMES; i += 10) {
+            if (!images[i] && !requested.has(i)) {
+              nextIndexToLoad = i;
+              break;
+            }
+          }
+        }
+        
+        // 5. Lowest priority: Fill remaining gaps sequentially starting from target
+        if (nextIndexToLoad === -1) {
+           for (let i = 1; i <= TOTAL_FRAMES; i++) {
+             // Look ahead first, then loop around
+             const checkIdx = ((target + i - 1) % TOTAL_FRAMES) + 1;
+             if (!images[checkIdx] && !requested.has(checkIdx)) {
+               nextIndexToLoad = checkIdx;
+               break;
+             }
+           }
+        }
+
+        if (nextIndexToLoad !== -1) {
+          requested.add(nextIndexToLoad);
+          activeConnections++;
+          
+          const img = new Image();
+          img.src = getFramePath(nextIndexToLoad);
+          
+          const handleComplete = () => {
+            if (isMounted) {
+              images[nextIndexToLoad] = img;
+              activeConnections--;
+              if (onFrameLoaded) onFrameLoaded(nextIndexToLoad);
+            }
+          };
+
+          img.onload = handleComplete;
+          img.onerror = () => {
+            if (isMounted) activeConnections--; // Still free up connection on error
+          };
+        } else {
+          // Everything is loaded or requested
+          break; 
+        }
       }
-    }
-
-    const loadBatch = (indices: number[], concurrency = 4, delay = 0): Promise<void> => {
-      return new Promise((resolve) => {
-        let cursor = 0;
-        let active = 0;
-
-        const pump = () => {
-          if (!isMounted) return;
-          if (cursor >= indices.length && active === 0) {
-            resolve();
-            return;
-          }
-
-          while (active < concurrency && cursor < indices.length) {
-            const idx = indices[cursor++];
-            active++;
-
-            const img = new Image();
-            img.src = getFramePath(idx);
-
-            img.onload = () => {
-              if (isMounted) {
-                images[idx] = img;
-                active--;
-                if (delay > 0) {
-                  setTimeout(pump, delay);
-                } else {
-                  pump();
-                }
-              }
-            };
-            img.onerror = () => {
-              if (isMounted) {
-                active--;
-                if (delay > 0) {
-                  setTimeout(pump, delay);
-                } else {
-                  pump();
-                }
-              }
-            };
-          }
-        };
-
-        pump();
-      });
+      
+      // Schedule next check
+      // Use setTimeout to yield thread to browser for smooth scrolling
+      loopId = setTimeout(loadNextPriorities, 50) as unknown as number;
     };
 
-    // Chain the loading: Load priority frames first (sparse skeleton for instant fast-scroll coverage)
-    loadBatch(priorityIndices, 6).then(() => {
-      if (isMounted) {
-        // Fill in the gaps quickly but yield the main thread slightly (10ms)
-        loadBatch(secondaryIndices, 4, 10);
-      }
-    });
+    // Start background loading loop after a short delay to let the page render first
+    setTimeout(loadNextPriorities, 500);
 
     return () => {
       isMounted = false;
+      clearTimeout(loopId);
     };
-  }, []);
+  }, [onFrameLoaded]);
 
   // Helper to get nearest loaded frame to avoid any blank flicker
   const getNearestFrame = useCallback((targetIndex: number): HTMLImageElement | null => {
@@ -111,6 +157,7 @@ export function useHeroFrames() {
 
     // Search outwards for closest available loaded frame (expanded search radius)
     for (let offset = 1; offset <= 120; offset++) {
+      // Prefer looking backwards so the animation doesn't jump ahead of scroll
       const before = clamped - offset;
       if (before >= 1) {
         const imgBefore = images[before];
@@ -119,6 +166,7 @@ export function useHeroFrames() {
           return imgBefore;
         }
       }
+      
       const after = clamped + offset;
       if (after <= TOTAL_FRAMES) {
         const imgAfter = images[after];
@@ -135,17 +183,7 @@ export function useHeroFrames() {
       return lastFound;
     }
 
-    // If scrubbing in the video and no nearby frame is found, search backwards to find the highest loaded frame
-    if (clamped > 1) {
-      for (let i = clamped; i >= 1; i--) {
-        const img = images[i];
-        if (img && img.complete && img.naturalWidth > 0) {
-          lastFoundIndexRef.current = i;
-          return img;
-        }
-      }
-    }
-
+    // Fallback to frame 1
     return images[1] || null;
   }, []);
 
@@ -153,5 +191,6 @@ export function useHeroFrames() {
     totalFrames: TOTAL_FRAMES,
     isInitialReady,
     getNearestFrame,
+    setTargetFrame
   };
 }
