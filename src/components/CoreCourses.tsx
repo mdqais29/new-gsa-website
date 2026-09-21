@@ -4,10 +4,10 @@ import { motion, Variants } from 'framer-motion';
 export const CoreCourses: React.FC = () => {
   const courses = [
     {
-      id: 'fire-safety',
-      title: 'Diploma in Fire & Safety',
-      description: 'Build a strong foundation in hazard prevention, fire systems, and workplace safety essentials.',
-      image: '/assets/course_fire_safety.jpg',
+      id: 'advanced-diploma-construction',
+      title: 'Advanced Diploma in Construction Safety',
+      description: 'Specialized advanced diploma in construction safety protocols, hazard mitigation, and site engineering.',
+      image: '/assets/course_international_cert.jpg',
     },
     {
       id: 'industrial-safety',
@@ -22,10 +22,10 @@ export const CoreCourses: React.FC = () => {
       image: '/assets/course_construction_safety.jpg',
     },
     {
-      id: 'advanced-diploma-construction',
-      title: 'Advanced Diploma in Construction Safety',
-      description: 'Specialized advanced diploma in construction safety protocols, hazard mitigation, and site engineering.',
-      image: '/assets/course_international_cert.jpg',
+      id: 'fire-safety',
+      title: 'Diploma in Fire Safety',
+      description: 'Build a strong foundation in hazard prevention, fire systems, and workplace safety essentials.',
+      image: '/assets/course_fire_safety.jpg',
     },
   ];
 

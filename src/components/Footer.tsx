@@ -32,11 +32,11 @@ export const Footer: React.FC = () => {
   ];
 
   const popularCourses = [
-    'Diploma in Fire & Safety',
-    'Industrial Safety',
-    'Construction Safety',
-    'Advanced Diploma in OHS',
     'Advanced Diploma in Construction Safety',
+    'Industrial Safety Management',
+    'Construction Site Safety',
+    'Diploma in Fire Safety',
+    'Advanced Diploma in OHS',
     'IOSH Managing Safely',
     'OSHA 30-Hour Certification',
   ];

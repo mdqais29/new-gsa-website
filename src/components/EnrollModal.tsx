@@ -12,7 +12,7 @@ interface EnrollModalProps {
 export const EnrollModal: React.FC<EnrollModalProps> = ({
   isOpen,
   onClose,
-  defaultCourse = 'Diploma in Fire & Safety',
+  defaultCourse = 'Advanced Diploma in Construction Safety',
 }) => {
   const [formData, setFormData] = useState({
     name: '',
@@ -147,11 +147,11 @@ export const EnrollModal: React.FC<EnrollModalProps> = ({
                       onChange={(e) => setFormData({ ...formData, course: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-sm text-midnight-950 focus:outline-none focus:border-safety-orange focus:bg-white focus:ring-2 focus:ring-safety-orange/20"
                     >
-                      <option value="Diploma in Fire & Safety">Diploma in Fire & Safety (1 Year)</option>
                       <option value="Advanced Diploma in Construction Safety">Advanced Diploma in Construction Safety</option>
-                      <option value="IOSH & OSHA International">IOSH & OSHA International</option>
                       <option value="Industrial Safety Management">Industrial Safety Management</option>
                       <option value="Construction Site Safety">Construction Site Safety</option>
+                      <option value="Diploma in Fire Safety">Diploma in Fire Safety (1 Year)</option>
+                      <option value="IOSH & OSHA International">IOSH & OSHA International</option>
                       <option value="Fast-Track Safety Certification">Fast-Track Safety Certification</option>
                       <option value="General Admission & Fee Inquiry">General Admission & Fee Inquiry</option>
                     </select>

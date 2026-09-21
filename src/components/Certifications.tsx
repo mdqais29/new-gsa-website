@@ -5,10 +5,10 @@ import { motion, Variants } from 'framer-motion';
 export const Certifications: React.FC = () => {
   const certifications = [
     {
-      id: 'iosh',
-      country: 'UK',
-      name: 'IOSH',
-      description: 'Ideal for building practical workplace safety management capability.',
+      id: 'construction-safety',
+      country: 'Govt. Recognized',
+      name: 'Advanced Diploma in Construction Safety',
+      description: 'Comprehensive program specialized in construction site safety, risk analysis, and safety engineering.',
     },
     {
       id: 'osha',
@@ -17,10 +17,10 @@ export const Certifications: React.FC = () => {
       description: 'Strengthen your understanding of occupational safety requirements and best practices.',
     },
     {
-      id: 'construction-safety',
-      country: 'Govt. Recognized',
-      name: 'Advanced Diploma in Construction Safety',
-      description: 'Comprehensive program specialized in construction site safety, risk analysis, and safety engineering.',
+      id: 'iosh',
+      country: 'UK',
+      name: 'IOSH',
+      description: 'Ideal for building practical workplace safety management capability.',
     },
   ];
 

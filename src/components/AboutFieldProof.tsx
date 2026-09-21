@@ -37,30 +37,7 @@ export const AboutFieldProof: React.FC = () => {
 
             {/* 3 Modern Stacked Pillar Cards */}
             <div className="space-y-2.5 sm:space-y-3">
-              {/* Card 1: Industrial Safety */}
-              <motion.div
-                whileHover={{ y: -3, x: 2, transition: { duration: 0.2 } }}
-                className="group relative p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-safety-orange/40 transition-colors duration-300 flex items-center justify-between gap-3 sm:gap-4"
-              >
-                <div className="flex items-center gap-3 sm:gap-3.5">
-                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-orange-500/10 text-safety-orange border border-orange-200 flex items-center justify-center flex-shrink-0 group-hover:bg-safety-orange group-hover:text-white transition-colors duration-300">
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm sm:text-base font-bold text-slate-950 group-hover:text-safety-orange transition-colors duration-300">
-                      Industrial Safety
-                    </h4>
-                    <p className="text-xs sm:text-sm text-slate-600 leading-snug">
-                      Industry-focused training for modern workplace risks
-                    </p>
-                  </div>
-                </div>
-                <div className="hidden sm:flex items-center justify-center w-7 h-7 rounded-full bg-slate-50 text-slate-400 group-hover:bg-orange-50 group-hover:text-safety-orange group-hover:translate-x-0.5 transition-all flex-shrink-0 border border-slate-100 group-hover:border-orange-200">
-                  <span className="text-xs font-bold">01</span>
-                </div>
-              </motion.div>
-
-              {/* Card 2: Construction Safety */}
+              {/* Card 1: Construction Safety */}
               <motion.div
                 whileHover={{ y: -3, x: 2, transition: { duration: 0.2 } }}
                 className="group relative p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-safety-orange/40 transition-colors duration-300 flex items-center justify-between gap-3 sm:gap-4"
@@ -79,6 +56,29 @@ export const AboutFieldProof: React.FC = () => {
                   </div>
                 </div>
                 <div className="hidden sm:flex items-center justify-center w-7 h-7 rounded-full bg-slate-50 text-slate-400 group-hover:bg-amber-50 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all flex-shrink-0 border border-slate-100 group-hover:border-amber-200">
+                  <span className="text-xs font-bold">01</span>
+                </div>
+              </motion.div>
+
+              {/* Card 2: Industrial Safety */}
+              <motion.div
+                whileHover={{ y: -3, x: 2, transition: { duration: 0.2 } }}
+                className="group relative p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-slate-200/90 shadow-sm hover:shadow-md hover:border-safety-orange/40 transition-colors duration-300 flex items-center justify-between gap-3 sm:gap-4"
+              >
+                <div className="flex items-center gap-3 sm:gap-3.5">
+                  <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-orange-500/10 text-safety-orange border border-orange-200 flex items-center justify-center flex-shrink-0 group-hover:bg-safety-orange group-hover:text-white transition-colors duration-300">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-bold text-slate-950 group-hover:text-safety-orange transition-colors duration-300">
+                      Industrial Safety
+                    </h4>
+                    <p className="text-xs sm:text-sm text-slate-600 leading-snug">
+                      Industry-focused training for modern workplace risks
+                    </p>
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center justify-center w-7 h-7 rounded-full bg-slate-50 text-slate-400 group-hover:bg-orange-50 group-hover:text-safety-orange group-hover:translate-x-0.5 transition-all flex-shrink-0 border border-slate-100 group-hover:border-orange-200">
                   <span className="text-xs font-bold">02</span>
                 </div>
               </motion.div>
