@@ -308,7 +308,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           </h2>
 
           <p className="text-xs sm:text-sm md:text-base text-slate-200 leading-relaxed font-normal">
-            Learn industrial safety from experienced professionals. Build strong core fundamentals, master workplace compliance, and prepare for high-growth engineering roles.
+            Learn safety engineering from experienced professionals. Build strong core fundamentals, master workplace compliance, and prepare for high-growth engineering roles.
           </p>
         </div>
       </div>
@@ -330,7 +330,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           </div>
 
           <h2 className="text-base sm:text-2xl lg:text-3xl font-bold text-white tracking-tight leading-[1.25] sm:leading-[1.28] mb-2 sm:mb-3.5 font-syncopate uppercase">
-            Learn industrial safety &{' '}
+            Learn safety engineering &{' '}
             <span className="text-[#FF3E00]">
               risk practices.
             </span>
