@@ -22,44 +22,51 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
   const scrollProgressRef = useRef(0);
   const currentFrameRef = useRef(1);
+  const lastRenderedIndexRef = useRef(-1);
   const imagesMapRef = useRef<Map<number, HTMLImageElement>>(new Map());
+
+  // Smoothstep hermite curve for cinematic, organic text dissolves
+  const smoothstep = (min: number, max: number, value: number) => {
+    const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+    return x * x * (3 - 2 * x);
+  };
 
   // Phase overlay updates — direct DOM style manipulation, zero React re-renders
   const updateOverlays = useCallback((progress: number) => {
-    // Phase 1: 0% - 28%
-    const p1 = progress <= 0.25 ? 1 : Math.max(0, 1 - (progress - 0.25) / 0.03);
+    // Phase 1: 0% - 28% (gentle fade out)
+    const p1 = 1 - smoothstep(0.20, 0.28, progress);
     if (phase1Ref.current) {
       phase1Ref.current.style.opacity = String(p1);
-      phase1Ref.current.style.visibility = p1 > 0.05 ? 'visible' : 'hidden';
+      phase1Ref.current.style.visibility = p1 > 0.02 ? 'visible' : 'hidden';
     }
 
-    // Phase 2: 29% - 62%
-    let p2 = 0;
-    if (progress >= 0.28 && progress <= 0.62) {
-      if (progress < 0.31) p2 = (progress - 0.28) / 0.03;
-      else if (progress > 0.58) p2 = Math.max(0, 1 - (progress - 0.58) / 0.03);
-      else p2 = 1;
-    }
+    // Phase 2: 28% - 64% (smooth dissolve in, hold, smooth dissolve out)
+    const p2In = smoothstep(0.28, 0.35, progress);
+    const p2Out = 1 - smoothstep(0.56, 0.64, progress);
+    const p2 = Math.min(p2In, p2Out);
     if (phase2Ref.current) {
       phase2Ref.current.style.opacity = String(p2);
-      phase2Ref.current.style.visibility = p2 > 0.05 ? 'visible' : 'hidden';
+      phase2Ref.current.style.visibility = p2 > 0.02 ? 'visible' : 'hidden';
     }
 
-    // Phase 3: 63% - 100%
-    const p3 = progress >= 0.62 ? Math.min(1, (progress - 0.62) / 0.03) : 0;
+    // Phase 3: 62% - 100% (smooth dissolve in to final lockup)
+    const p3 = smoothstep(0.62, 0.70, progress);
     if (phase3Ref.current) {
       phase3Ref.current.style.opacity = String(p3);
-      phase3Ref.current.style.visibility = p3 > 0.05 ? 'visible' : 'hidden';
-      phase3Ref.current.style.pointerEvents = progress >= 0.62 ? 'auto' : 'none';
+      phase3Ref.current.style.visibility = p3 > 0.02 ? 'visible' : 'hidden';
+      phase3Ref.current.style.pointerEvents = p3 >= 0.5 ? 'auto' : 'none';
     }
   }, []);
 
-  // Helper to draw an image to canvas with cover scaling
-  const renderImageToCanvas = useCallback((img: HTMLImageElement) => {
+  // Helper to draw an image to canvas with cover scaling (zero redundant clear calls)
+  const renderImageToCanvas = useCallback((img: HTMLImageElement, frameIdx: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
+
+    if (lastRenderedIndexRef.current === frameIdx) return;
+    lastRenderedIndexRef.current = frameIdx;
 
     const canvasRatio = canvas.width / canvas.height;
     const imgRatio = img.width / img.height;
@@ -79,8 +86,6 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
-    ctx.fillStyle = '#0a0a0f';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
   }, []);
 
@@ -90,30 +95,29 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     const map = imagesMapRef.current;
 
     if (map.has(targetIndex)) {
-      renderImageToCanvas(map.get(targetIndex)!);
+      renderImageToCanvas(map.get(targetIndex)!, targetIndex);
       return;
     }
 
     // Search outwards for nearest loaded frame
     for (let offset = 1; offset < 35; offset++) {
       if (map.has(targetIndex - offset)) {
-        renderImageToCanvas(map.get(targetIndex - offset)!);
+        renderImageToCanvas(map.get(targetIndex - offset)!, targetIndex - offset);
         return;
       }
       if (map.has(targetIndex + offset)) {
-        renderImageToCanvas(map.get(targetIndex + offset)!);
+        renderImageToCanvas(map.get(targetIndex + offset)!, targetIndex + offset);
         return;
       }
     }
 
     if (map.has(1)) {
-      renderImageToCanvas(map.get(1)!);
+      renderImageToCanvas(map.get(1)!, 1);
     }
   }, [renderImageToCanvas]);
 
   // Frame loading & Canvas sizing lifecycle
   useEffect(() => {
-    // Both mobile and desktop now use full 1080p frames for razor-sharp Retina clarity
     const folder = '/frames-desktop';
 
     const getFrameUrl = (idx: number) => {
@@ -134,7 +138,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           map.set(idx, img);
           // If the user is currently at this exact frame, redraw immediately
           if (currentFrameRef.current === idx) {
-            renderImageToCanvas(img);
+            renderImageToCanvas(img, idx);
           }
           resolve(img);
         };
@@ -145,7 +149,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
     // 1. Immediately load & display Frame 1
     loadFrame(1).then((img) => {
-      renderImageToCanvas(img);
+      renderImageToCanvas(img, 1);
     }).catch(() => {});
 
     // 2. Load skeleton (every 10th frame: 10, 20, 30... 300) so scrubbing is immediately responsive
@@ -162,14 +166,26 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
 
     const fullQueue = [...skeletonIndices, ...remainingIndices];
 
-    // Concurrently fetch frames without blocking UI
+    // Concurrently fetch frames with dynamic proximity prioritization:
+    // Always load the frame closest to where the user is currently scrolling!
     let active = 0;
     const isMobile = typeof window !== 'undefined' ? window.innerWidth < 768 : false;
     const CONCURRENCY = isMobile ? 6 : 8;
 
     const processQueue = () => {
       while (active < CONCURRENCY && fullQueue.length > 0) {
-        const nextIdx = fullQueue.shift()!;
+        // Find the index in fullQueue that is closest to user's current scroll frame
+        let closestIdx = 0;
+        let minDiff = Math.abs(fullQueue[0] - currentFrameRef.current);
+        for (let i = 1; i < fullQueue.length; i++) {
+          const diff = Math.abs(fullQueue[i] - currentFrameRef.current);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIdx = i;
+          }
+        }
+        const nextIdx = fullQueue.splice(closestIdx, 1)[0];
+
         active++;
         loadFrame(nextIdx)
           .catch(() => {})
@@ -189,6 +205,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         canvas.width = window.innerWidth * dpr;
         canvas.height = window.innerHeight * dpr;
+        lastRenderedIndexRef.current = -1;
         renderFrame(currentFrameRef.current);
       }
     };
@@ -207,6 +224,10 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     const canvas = canvasRef.current;
     if (!container || !canvas) return;
 
+    const isMobile = window.innerWidth < 768;
+    const scrubTime = isMobile ? 0.9 : 1.25;
+    const endDistance = isMobile ? '+=450%' : '+=550%';
+
     const ctx = gsap.context(() => {
       const proxy = { progress: 0 };
 
@@ -216,11 +237,11 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
         scrollTrigger: {
           trigger: container,
           start: 'top top',
-          end: '+=550%',
+          end: endDistance,
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
-          scrub: 1.8, // Ultra-luxurious buttery momentum glide on both desktop and mobile
+          scrub: scrubTime, // Calibrated buttery glide: 0.9s on mobile touch, 1.25s on desktop wheel
           onLeave: () => {
             scrollProgressRef.current = 1;
             updateOverlays(1);

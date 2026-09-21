@@ -23,12 +23,12 @@ export function useLenis() {
     }
 
     const lenis = new Lenis({
-      duration: 1.4,
+      duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       gestureOrientation: 'vertical',
       smoothWheel: true,
-      wheelMultiplier: 1.05,
+      wheelMultiplier: 1.0,
     });
 
     // Synchronize Lenis scroll event with ScrollTrigger updates
@@ -42,7 +42,8 @@ export function useLenis() {
     };
 
     gsap.ticker.add(updateTicker);
-    gsap.ticker.lagSmoothing(0);
+    // Restore GSAP's built-in lag smoothing cushion (absorbs minor browser timing hiccups like air suspension)
+    gsap.ticker.lagSmoothing(500, 33);
 
     return () => {
       gsap.ticker.remove(updateTicker);
