@@ -7,19 +7,13 @@ export const CoreCourses: React.FC = () => {
       id: 'advanced-diploma-construction',
       title: 'Advanced Diploma in Construction Safety',
       description: 'Specialized advanced diploma in construction safety protocols, hazard mitigation, and site engineering.',
-      image: '/assets/course_international_cert.jpg',
+      image: '/assets/course_construction_safety.jpg',
     },
     {
       id: 'industrial-safety',
       title: 'Industrial Safety',
       description: 'Learn industrial risk management, compliance practices, and shop-floor safety operations.',
       image: '/assets/course_industrial_safety.jpg',
-    },
-    {
-      id: 'construction-safety',
-      title: 'Construction Safety',
-      description: 'Prepare for site-based safety leadership with construction-focused procedures and controls.',
-      image: '/assets/course_construction_safety.jpg',
     },
     {
       id: 'fire-safety',
@@ -74,13 +68,13 @@ export const CoreCourses: React.FC = () => {
           </h2>
         </motion.div>
 
-        {/* 4 Course Cards Grid - Clean, Icon-free & Button-free with Motion */}
+        {/* 3 Core Course Cards Grid - Clean, Icon-free & Button-free with Motion */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: '-60px' }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"
         >
           {courses.map((course) => (
             <motion.div
