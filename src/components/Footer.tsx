@@ -36,7 +36,7 @@ export const Footer: React.FC = () => {
     'Industrial Safety',
     'Construction Safety',
     'Advanced Diploma in OHS',
-    'NEBOSH IGC & HSA',
+    'Advanced Diploma in Construction Safety',
     'IOSH Managing Safely',
     'OSHA 30-Hour Certification',
   ];

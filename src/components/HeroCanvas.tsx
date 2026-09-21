@@ -367,7 +367,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           </h1>
 
           <p className="text-xs sm:text-sm md:text-base lg:text-lg text-slate-200 max-w-xl mb-3 sm:mb-7 font-normal leading-relaxed">
-            Get certified in recognized programs including Diploma in Fire & Safety, IOSH, OSHA, and NEBOSH. Unlock high-paying safety careers in India and abroad with dedicated job guidance.
+            Get certified in recognized programs including Diploma in Fire & Safety, Advanced Diploma in Construction Safety, IOSH, and OSHA. Unlock high-paying safety careers in India and abroad with dedicated job guidance.
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-start gap-2.5 sm:gap-3 mb-3 sm:mb-7">

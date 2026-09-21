@@ -17,10 +17,10 @@ export const Certifications: React.FC = () => {
       description: 'Strengthen your understanding of occupational safety requirements and best practices.',
     },
     {
-      id: 'nebosh',
-      country: 'UK',
-      name: 'NEBOSH',
-      description: 'Recognized by employers worldwide for health and safety excellence.',
+      id: 'construction-safety',
+      country: 'Govt. Recognized',
+      name: 'Advanced Diploma in Construction Safety',
+      description: 'Comprehensive program specialized in construction site safety, risk analysis, and safety engineering.',
     },
   ];
 

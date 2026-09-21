@@ -22,9 +22,9 @@ export const CoreCourses: React.FC = () => {
       image: '/assets/course_construction_safety.jpg',
     },
     {
-      id: 'international-cert',
-      title: 'NEBOSH, IOSH & OSHA Certifications',
-      description: 'Gain recognized certifications that strengthen your profile for safety roles in India and abroad.',
+      id: 'advanced-diploma-construction',
+      title: 'Advanced Diploma in Construction Safety',
+      description: 'Specialized advanced diploma in construction safety protocols, hazard mitigation, and site engineering.',
       image: '/assets/course_international_cert.jpg',
     },
   ];

@@ -52,7 +52,7 @@ export const App: React.FC = () => {
       {/* Orange Section Divider Line */}
       <SectionDivider />
 
-      {/* 4. Globally Respected Certifications (NEBOSH, IOSH, OSHA) */}
+      {/* 4. Globally Respected Certifications (IOSH, OSHA & Advanced Diploma) */}
       <Certifications />
 
       {/* Orange Section Divider Line */}

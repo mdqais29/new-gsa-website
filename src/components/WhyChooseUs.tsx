@@ -7,7 +7,7 @@ export const WhyChooseUs: React.FC = () => {
     {
       id: 'cert',
       title: 'International Certifications',
-      description: 'Learning pathways aligned with NEBOSH, IOSH, and OSHA standards.',
+      description: 'Learning pathways aligned with IOSH, OSHA, and national safety standards.',
       icon: BadgeCheck,
     },
     {
