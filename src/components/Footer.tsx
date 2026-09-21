@@ -126,6 +126,9 @@ export const Footer: React.FC = () => {
                   <a href="tel:+919959340025" className="hover:text-safety-orange block text-slate-300">
                     +91 99593 40025
                   </a>
+                  <a href="tel:08682454016" className="hover:text-safety-orange block text-slate-300">
+                    <span className="text-slate-400">Landline:</span> 08682 454016
+                  </a>
                 </div>
               </li>
 
