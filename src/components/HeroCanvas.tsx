@@ -225,7 +225,8 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
     if (!container || !canvas) return;
 
     const isMobile = window.innerWidth < 768;
-    const scrubTime = isMobile ? 0.9 : 1.25;
+    // Calibrated buttery glide: 1.4s on mobile touch, 1.6s on desktop wheel
+    const scrubTime = isMobile ? 1.4 : 1.6;
     const endDistance = isMobile ? '+=450%' : '+=550%';
 
     const ctx = gsap.context(() => {
@@ -241,7 +242,7 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
-          scrub: scrubTime, // Calibrated buttery glide: 0.9s on mobile touch, 1.25s on desktop wheel
+          scrub: scrubTime,
           onLeave: () => {
             scrollProgressRef.current = 1;
             updateOverlays(1);
@@ -252,14 +253,15 @@ export const HeroCanvas: React.FC<HeroCanvasProps> = ({ onOpenEnroll }) => {
             updateOverlays(0);
             renderFrame(1);
           },
-          onUpdate: (self) => {
-            const progress = self.progress;
-            scrollProgressRef.current = progress;
-            updateOverlays(progress);
+        },
+        // onUpdate on the tween guarantees true deceleration glide after finger is lifted / wheel stops
+        onUpdate: () => {
+          const progress = proxy.progress;
+          scrollProgressRef.current = progress;
+          updateOverlays(progress);
 
-            const targetFrame = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(progress * (TOTAL_FRAMES - 1)) + 1));
-            renderFrame(targetFrame);
-          },
+          const targetFrame = Math.max(1, Math.min(TOTAL_FRAMES, Math.round(progress * (TOTAL_FRAMES - 1)) + 1));
+          renderFrame(targetFrame);
         },
       });
     }, container);
